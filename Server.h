@@ -13,7 +13,7 @@ private:
     static constexpr auto BACKLOG = 3;
 
 public:
-    static void start();
+    [[noreturn]] static void start();
 };
 
 #endif
