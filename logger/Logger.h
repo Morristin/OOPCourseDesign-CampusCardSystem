@@ -2,6 +2,7 @@
 #define LOGGER_H
 
 #include <fstream>
+#include <iostream>
 #include <string>
 
 class Logger {
@@ -22,6 +23,13 @@ public:
     void info(const std::string& msg) { write("INFO", msg); }
     void warning(const std::string& msg) { write("WARNING", msg); }
     void error(const std::string& msg) { write("ERROR", msg); }
+    void critical(const std::string& msg)
+    {
+        write("CRITICAL", msg);
+        std::cout << "Serious error happens: " << msg << std::endl;
+        std::cout << "Program is forced to stop." << std::endl;
+        std::cerr << msg;
+    }
 };
 
 #endif
