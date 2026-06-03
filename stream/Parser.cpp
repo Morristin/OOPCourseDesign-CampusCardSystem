@@ -8,6 +8,8 @@ void Parser::store_item(const std::string& item)
 
 Parser::Parser(const std::string& origin_msg)
 {
+    this->origin_msg = origin_msg;
+
     size_t start, end = 0;
     while ((end = origin_msg.find(',', start = (end == 0 ? 0 : end + 1))) != std::string::npos) {
         store_item(origin_msg.substr(start, end - start));
