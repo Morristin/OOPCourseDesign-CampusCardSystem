@@ -7,8 +7,10 @@ add_executable(Server)
 target_sources(Server
     PRIVATE
         logger/Logger.cpp
-        server/Server.cpp
+        stream/Stream.cpp
+        stream/Parser.cpp
     PUBLIC
+        server/Server.cpp
         server/main.cpp
 )
 
@@ -16,7 +18,9 @@ add_executable(Client)
 target_sources(Client
     PRIVATE
         logger/Logger.cpp
-        client/Client.cpp
+        stream/Stream.cpp
+        stream/Parser.cpp
     PUBLIC
+        client/Client.cpp
         client/main.cpp
 )
