@@ -1,6 +1,7 @@
 #include "Client.h"
 
 #include "../logger/Logger.h"
+#include "../stream/protocol.h"
 
 #include <arpa/inet.h>
 
@@ -27,6 +28,7 @@ Client::Client(const std::string& ip, int port) : Client()
         exit(CONNECT_FAILED);
     }
 
+    std::cout << "Welcome to Campus Card Management System." << std::endl;
     while (!login()) { }
     while (true) { }
 }
@@ -34,8 +36,7 @@ Client::Client(const std::string& ip, int port) : Client()
 int Client::login() const
 {
     std::string username, password;
-    std::cout << "Welcome to Campus Card Management System." << std::endl;
-    std::cout << "Please login first. Enter your username and password here: " << std::endl;
+    std::cout << "Enter your username and password here: " << std::endl;
     std::cin >> username >> password;
 
     if (username.find(',') == std::string::npos && username.find(':') == std::string::npos) {
@@ -45,8 +46,14 @@ int Client::login() const
         return false;
     }
 
-    if (const auto message = receive_msg(); message["status"] == "success")
+    if (const auto message = receive_msg(); message["status"] == ActionStatus::SUCCESS) {
+        std::cout << "Welcome, " << username << "!" << std::endl;
         return true;
+    } else if (message["status"] == ActionStatus::FAILED && message["msg"] == ErrorMsg::USER_NOT_FOUND) {
+        std::cout << "You have not register yet. Check your name or contact operator." << std::endl;
+    } else if (message["status"] == ActionStatus::FAILED && message["msg"] == ErrorMsg::WRONG_PASSWORD) {
+        std::cout << "Your password is not correct. Please try again." << std::endl;
+    }
 
     return false;
 }

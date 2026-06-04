@@ -9,6 +9,7 @@ target_sources(Server
         logger/Logger.cpp
         stream/Stream.cpp
         stream/Parser.cpp
+        stream/protocol.h
     PUBLIC
         server/Server.cpp
         server/main.cpp
@@ -20,6 +21,7 @@ target_sources(Client
         logger/Logger.cpp
         stream/Stream.cpp
         stream/Parser.cpp
+        stream/protocol.h
     PUBLIC
         client/Client.cpp
         client/main.cpp

@@ -1,5 +1,6 @@
 #include "Server.h"
 #include "../logger/Logger.h"
+#include "../stream/protocol.h"
 
 #include <netinet/in.h>
 
@@ -62,7 +63,7 @@ void Server::handle_login(const Stream& stream)
         }
 
         auto user = message["user"], password = message["password"];
-        stream.send_msg("status:success");
+        stream.send_msg(std::format("status:{}", ActionStatus::SUCCESS));
         logger.info(std::format("User {} successfully logged in.", message["user"]));
         return;
     }
