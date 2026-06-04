@@ -11,6 +11,8 @@ void Stream::send_msg(const std::string& msg) const
     if (const auto status = send(socket, msg.c_str(), msg.length(), 0); status < 0) {
         logger.error("Send message failed.");
         std::cout << "Send message failed. Please check connection and try again later." << std::endl;
+    } else {
+        logger.debug(std::format("Send message: {}", msg));
     }
 }
 
@@ -26,6 +28,8 @@ void Stream::send_msg(const std::string& msg) const
         logger.warning("Net connection is closed by server.");
         std::cout << "Net connection is closed by server. Program stopped." << std::endl;
         exit(0);
+    } else {
+        logger.debug(std::format("Received message: {}", buffer.data()));
     }
 
     return Parser(std::string(buffer.data(), received_bytes));
