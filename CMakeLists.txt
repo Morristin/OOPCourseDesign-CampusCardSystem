@@ -4,6 +4,8 @@ project(CurriculumDesign)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(Server)
+find_package(SQLite3 REQUIRED)
+target_link_libraries(Server PRIVATE SQLite::SQLite3)
 target_sources(Server
     PRIVATE
         logger/Logger.cpp
@@ -11,6 +13,7 @@ target_sources(Server
         stream/Parser.cpp
         stream/protocol.h
     PUBLIC
+        server/Database.cpp
         server/Server.cpp
         server/main.cpp
 )
