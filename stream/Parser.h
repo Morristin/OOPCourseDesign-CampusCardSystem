@@ -12,10 +12,10 @@ private:
 
 public:
     explicit Parser(const std::string& origin_msg);
-    std::string origin() { return origin_msg; }
+    [[nodiscard]] std::string origin() const { return origin_msg; }
 
     // Operator[] won't throw any exceptions. Return blank string if key can not be found.
-    std::string operator[](const std::string& key);
+    std::string operator[](const std::string& key) const;
 };
 
 #endif

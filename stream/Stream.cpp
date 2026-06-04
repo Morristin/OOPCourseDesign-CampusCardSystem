@@ -14,7 +14,7 @@ void Stream::send_msg(const std::string& msg) const
     }
 }
 
-[[nodiscard]] std::string Stream::receive_msg() const
+[[nodiscard]] Parser Stream::receive_msg() const
 {
     std::vector<char> buffer(BUFFER_SIZE);
     const auto received_bytes = recv(socket, buffer.data(), BUFFER_SIZE, 0);
@@ -28,5 +28,5 @@ void Stream::send_msg(const std::string& msg) const
         exit(0);
     }
 
-    return { buffer.data(), static_cast<size_t>(received_bytes) };
+    return Parser(std::string(buffer.data(), received_bytes));
 }
