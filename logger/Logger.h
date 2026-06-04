@@ -22,13 +22,17 @@ public:
     void debug(const std::string& msg) { write("DEBUG", msg); }
     void info(const std::string& msg) { write("INFO", msg); }
     void warning(const std::string& msg) { write("WARNING", msg); }
-    void error(const std::string& msg) { write("ERROR", msg); }
+    void error(const std::string& msg)
+    {
+        write("ERROR", msg);
+        std::cout << "Error: " << msg << std::endl;
+    }
     void critical(const std::string& msg)
     {
         write("CRITICAL", msg);
         std::cout << "Serious error happens: " << msg << std::endl;
         std::cout << "Program is forced to stop." << std::endl;
-        std::cerr << msg;
+        std::cerr << msg << std::endl;
     }
 };
 
