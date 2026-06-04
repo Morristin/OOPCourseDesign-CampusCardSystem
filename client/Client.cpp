@@ -40,18 +40,18 @@ int Client::login() const
     std::cin >> username >> password;
 
     if (username.find(',') == std::string::npos && username.find(':') == std::string::npos) {
-        send_msg(std::format("action:login,username:{},password:{}", username, password));
+        send_msg(std::format(ACTION_LOGIN, username, password));
     } else {
         std::cout << "You can not include special character in username" << std::endl;
         return false;
     }
 
-    if (const auto message = receive_msg(); message["status"] == ActionStatus::SUCCESS) {
+    if (const auto message = receive_msg(); message["status"] == Status::SUCCESS) {
         std::cout << "Welcome, " << username << "!" << std::endl;
         return true;
-    } else if (message["status"] == ActionStatus::FAILED && message["msg"] == ErrorMsg::USER_NOT_FOUND) {
+    } else if (message["status"] == Status::FAILED && message["message"] == ErrorMsg::USER_NOT_FOUND) {
         std::cout << "You have not register yet. Check your name or contact operator." << std::endl;
-    } else if (message["status"] == ActionStatus::FAILED && message["msg"] == ErrorMsg::WRONG_PASSWORD) {
+    } else if (message["status"] == Status::FAILED && message["message"] == ErrorMsg::WRONG_PASSWORD) {
         std::cout << "Your password is not correct. Please try again." << std::endl;
     }
 

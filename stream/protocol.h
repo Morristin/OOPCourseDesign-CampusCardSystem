@@ -3,6 +3,11 @@
 
 #include <string_view>
 
+constexpr auto ACTION_LOGIN = "action:login,username:{},password:{}";
+
+constexpr auto STATUS_ONLY = "status:{}";
+constexpr auto STATUS_WITH_MEG = "status:{},message:{}";
+
 namespace Status {
 constexpr std::string_view SUCCESS = "success";
 constexpr std::string_view FAILED = "failed";
