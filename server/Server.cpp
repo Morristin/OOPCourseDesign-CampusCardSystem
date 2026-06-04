@@ -5,7 +5,7 @@
 
 static constexpr auto BIND_ADDRESS_FAILED = 21;
 static constexpr auto LISTEN_FAILED = 22;
-auto logger = Logger(__FILE__);
+static auto logger = Logger(__FILE__);
 
 [[noreturn]] void Server::start() const
 {
@@ -62,7 +62,7 @@ void Server::handle_login(const Stream& stream)
         }
 
         auto user = message["user"], password = message["password"];
-        stream.send_msg("action:login,status:success");
+        stream.send_msg("status:success");
         logger.info(std::format("User {} successfully logged in.", message["user"]));
         return;
     }

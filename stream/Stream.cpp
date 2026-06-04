@@ -4,7 +4,7 @@
 
 #include <sys/socket.h>
 
-auto logger = Logger(__FILE__);
+static auto logger = Logger(__FILE__);
 
 void Stream::send_msg(const std::string& msg) const
 {
