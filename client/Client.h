@@ -26,10 +26,11 @@ public:
     Client(const std::string& ip, int port);
     ~Client() { close(client); }
 
-    void start() const;
-
     void send_msg(const std::string& msg) const { stream.send_msg(msg); }
     [[nodiscard]] Parser receive_msg() const { return stream.receive_msg(); }
+
+    [[noreturn]] void start() const;
+    [[nodiscard]] int login() const;
 };
 
 #endif
