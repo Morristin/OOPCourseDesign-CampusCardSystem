@@ -23,8 +23,8 @@ public:
     Server() = default;
     ~Server() { close(server); }
 
-    [[noreturn]] void start() const;
-    static void handle_login(const Stream& stream);
+    [[noreturn]] void start();
+    void handle_login(const Stream& stream);
 };
 
 #endif

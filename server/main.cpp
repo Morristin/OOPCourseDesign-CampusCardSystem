@@ -2,6 +2,6 @@
 
 int main()
 {
-    const auto server = Server();
+    auto server = Server();
     server.start();
 }

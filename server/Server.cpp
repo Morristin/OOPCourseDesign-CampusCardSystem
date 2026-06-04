@@ -8,7 +8,7 @@ static constexpr auto BIND_ADDRESS_FAILED = 21;
 static constexpr auto LISTEN_FAILED = 22;
 static auto logger = Logger(__FILE__);
 
-[[noreturn]] void Server::start() const
+[[noreturn]] void Server::start()
 {
     setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &ALLOW_PORT_REUSE, sizeof(ALLOW_PORT_REUSE));
 
@@ -56,15 +56,24 @@ void Server::handle_login(const Stream& stream)
 {
     while (true) {
         auto message = stream.receive_msg();
-
         if (message["action"] != "login") {
-            logger.info(std::format("Expect to get 'login' action. Get {} instead.", message["action"]));
+            logger.info(std::format("Expect to get 'login' action. Get {} instead.", message["username"]));
             continue;
         }
 
-        auto user = message["user"], password = message["password"];
-        stream.send_msg(std::format("status:{}", Status::SUCCESS));
-        logger.info(std::format("User {} successfully logged in.", message["user"]));
-        return;
+        const auto username = message["username"], password = message["password"];
+        if (const auto check_result = database.check_identity(username, password);
+            check_result == ErrorMsg::USER_NOT_FOUND)
+            stream.send_msg(std::format(STATUS_WITH_MEG, Status::FAILED, ErrorMsg::USER_NOT_FOUND));
+        else if (check_result == ErrorMsg::WRONG_PASSWORD)
+            stream.send_msg(std::format(STATUS_WITH_MEG, Status::FAILED, ErrorMsg::WRONG_PASSWORD));
+        else if (check_result == ErrorMsg::SQL_INJECTION) {
+            stream.send_msg(std::format(STATUS_WITH_MEG, Status::FAILED, ErrorMsg::SQL_INJECTION));
+            logger.warning(std::format("User may try to do SQL injection with input: {} & {}", username, password));
+        } else if (check_result == Status::SUCCESS) {
+            stream.send_msg(std::format(STATUS_ONLY, Status::SUCCESS));
+            logger.info(std::format("User {} successfully logged in.", message["user"]));
+            return;
+        }
     }
 }
