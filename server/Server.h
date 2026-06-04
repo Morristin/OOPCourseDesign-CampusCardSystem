@@ -2,6 +2,7 @@
 #define SERVER_H
 
 #include "../stream/Stream.h"
+#include "Database.h"
 
 #include <sys/socket.h>
 #include <unistd.h>
@@ -16,13 +17,14 @@ private:
     static constexpr auto BACKLOG = 3;
 
     int server = socket(SIN_FAMILY, SOCKET_TYPE, 0);
+    Database database = Database();
 
 public:
     Server() = default;
     ~Server() { close(server); }
 
     [[noreturn]] void start() const;
-    static void handle_login(const Stream& stream) ;
+    static void handle_login(const Stream& stream);
 };
 
 #endif

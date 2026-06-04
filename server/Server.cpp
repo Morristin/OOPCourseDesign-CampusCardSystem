@@ -63,7 +63,7 @@ void Server::handle_login(const Stream& stream)
         }
 
         auto user = message["user"], password = message["password"];
-        stream.send_msg(std::format("status:{}", ActionStatus::SUCCESS));
+        stream.send_msg(std::format("status:{}", Status::SUCCESS));
         logger.info(std::format("User {} successfully logged in.", message["user"]));
         return;
     }
