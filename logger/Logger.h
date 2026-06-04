@@ -11,7 +11,7 @@ private:
     std::string module_name;
     std::ofstream log_file;
 
-    static constexpr auto log_format = " [{}]\n{}: {}";
+    static constexpr auto log_format = " [{}]\n{}: {}\n";
     static constexpr auto date_format = "%b %d %H:%M:%S";
     void write(const std::string& level, const std::string& msg);
 
