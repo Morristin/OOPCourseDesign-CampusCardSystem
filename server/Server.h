@@ -1,6 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include "../stream/Stream.h"
+
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -8,7 +10,7 @@ class Server {
 private:
     static constexpr auto SIN_FAMILY = AF_INET;
     static constexpr auto SOCKET_TYPE = SOCK_STREAM;
-    static constexpr auto DEFAULT_PORT = htons(8080);
+    static constexpr auto DEFAULT_PORT = 8080;
 
     static constexpr auto ALLOW_PORT_REUSE = 1;
     static constexpr auto BACKLOG = 3;
@@ -20,6 +22,7 @@ public:
     ~Server() { close(server); }
 
     [[noreturn]] void start() const;
+    static void handle_login(const Stream& stream) ;
 };
 
 #endif
