@@ -11,7 +11,7 @@ private:
     static constexpr std::string log_name = LOG_FILE;
     std::string module_name;
 
-    std::mutex log_mutex;
+    static std::mutex log_mutex;
     std::ofstream log_file;
 
     static constexpr auto log_format = " [{}]\n{}: {}\n";

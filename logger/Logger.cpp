@@ -4,12 +4,15 @@
 
 constexpr int LOG_OPEN_FAILED = 1;
 
+// Initialize static class member std::mutex.
+std::mutex Logger::log_mutex;
+
 Logger::Logger(const std::string& file_name)
 {
     const auto short_file_name = file_name.substr(file_name.rfind('/') + 1);
     module_name = short_file_name.substr(0, short_file_name.rfind('.'));
 
-    if (log_file.open(log_name); !log_file.is_open()) {
+    if (log_file.open(log_name, std::ios::app); !log_file.is_open()) {
         std::cerr << "Error open log file: " << log_name << std::endl;
         exit(LOG_OPEN_FAILED);
     }
