@@ -29,7 +29,7 @@ public:
     void send_msg(const std::string& msg) const { stream.send_msg(msg); }
     [[nodiscard]] Parser receive_msg() const { return stream.receive_msg(); }
 
-    [[noreturn]] void start() const;
+    void start() const;
     [[nodiscard]] int login() const;
 };
 
