@@ -5,6 +5,15 @@
 
 #include <string>
 
+struct StreamException : std::exception {
+private:
+    std::string_view message;
+
+public:
+    explicit StreamException(const std::string_view message) : message(message) { }
+    [[nodiscard]] const char* what() const noexcept override { return message.data(); }
+};
+
 class Stream {
 private:
     static constexpr auto BUFFER_SIZE = 1024;

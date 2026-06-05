@@ -8,12 +8,10 @@ static auto logger = Logger(__FILE__);
 
 void Stream::send_msg(const std::string& msg) const
 {
-    if (const auto status = send(socket, msg.c_str(), msg.length(), 0); status < 0) {
+    if (const auto status = send(socket, msg.c_str(), msg.length(), 0); status < 0)
         logger.error("Send message failed.");
-        std::cout << "Send message failed. Please check connection and try again later." << std::endl;
-    } else {
+    else
         logger.debug(std::format("Send message: {}", msg));
-    }
 }
 
 [[nodiscard]] Parser Stream::receive_msg() const
@@ -23,11 +21,10 @@ void Stream::send_msg(const std::string& msg) const
 
     if (received_bytes < 0) {
         logger.error("Receive message failed.");
-        std::cout << "Receive message failed. Please check connection and try again later." << std::endl;
+        throw StreamException("Receive message failed.");
     } else if (received_bytes == 0) {
-        logger.warning("Net connection is closed by server.");
-        std::cout << "Net connection is closed by server. Program stopped." << std::endl;
-        exit(0);
+        logger.warning("Net connection is closed by opposite.");
+        throw StreamException("Net connection is closed by opposite.");
     } else {
         logger.debug(std::format("Received message: {}", buffer.data()));
     }
