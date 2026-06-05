@@ -17,7 +17,7 @@ void Database::initialize() const
                          "Username TEXT PRIMARY KEY, "
                          "Password TEXT NOT NULL, "
                          "Permission INT NOT NULL, "
-                         "Status TEXT NOT NULL, "
+                         "Status INT NOT NULL, "
                          "CardNumber TEXT UNIQUE );";
 
     sqlite3_exec(database, SQL, nullptr, nullptr, nullptr);
