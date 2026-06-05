@@ -19,12 +19,8 @@ void Database::initialize() const
                          "Permission INT NOT NULL, "
                          "Status TEXT NOT NULL, "
                          "CardNumber TEXT UNIQUE );";
-    char* err = nullptr;
 
-    if (sqlite3_exec(database, SQL, nullptr, nullptr, &err) != SQLITE_OK) {
-        logger.error(std::format("SQL Error: {}", err));
-        sqlite3_free(err);
-    }
+    sqlite3_exec(database, SQL, nullptr, nullptr, nullptr);
 }
 
 LoginUserStatus Database::check_identity(const std::string& username, const std::string& password)
@@ -34,17 +30,15 @@ LoginUserStatus Database::check_identity(const std::string& username, const std:
         throw DatabaseException(ErrorMsg::SQL_INJECTION);
 
     sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
-    if (sqlite3_step(cursor) == SQLITE_ROW) {
-        if (const auto stored_password = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
-            password == stored_password) {
-            const auto permission = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
-            const auto status = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 2));
-            const auto card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
-            return { permission, status, card_number };
-        } else {
-            throw DatabaseException(ErrorMsg::WRONG_PASSWORD);
-        }
-    } else {
+    if (sqlite3_step(cursor) != SQLITE_ROW)
         throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
-    }
+
+    if (const auto stored_password = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        password != stored_password)
+        throw DatabaseException(ErrorMsg::WRONG_PASSWORD);
+
+    const auto permission = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
+    const auto status = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 2));
+    const auto card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
+    return { permission, status, card_number };
 }

@@ -20,5 +20,5 @@ Parser::Parser(const std::string& origin_msg)
 std::string Parser::operator[](const std::string& key) const
 {
     const auto item = data.find(key);
-    return (item != data.end()) ? item->second : "";
+    return item != data.end() ? item->second : "";
 }
