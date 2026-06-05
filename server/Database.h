@@ -4,6 +4,17 @@
 #include <sqlite3.h>
 #include <string>
 
+#include "../stream/protocol.h"
+
+struct DatabaseException : std::exception {
+private:
+    std::string_view message;
+
+public:
+    explicit DatabaseException(const std::string_view message) : message(message) { }
+    [[nodiscard]] const char* what() const noexcept override { return message.data(); }
+};
+
 class Database {
 private:
     static constexpr std::string DATABASE_PATH = "server/data.sqlite3";
@@ -16,7 +27,7 @@ public:
     ~Database() { sqlite3_close(database); }
 
     void initialize() const;
-    std::string_view check_identity(const std::string& username, const std::string& password);
+    LoginUserStatus check_identity(const std::string& username, const std::string& password);
 };
 
 #endif

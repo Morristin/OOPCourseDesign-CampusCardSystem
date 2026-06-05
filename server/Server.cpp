@@ -1,6 +1,8 @@
 #include "Server.h"
+
 #include "../logger/Logger.h"
 #include "../stream/protocol.h"
+#include "Database.h"
 
 #include <netinet/in.h>
 
@@ -17,18 +19,19 @@ static auto logger = Logger(__FILE__);
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(DEFAULT_PORT);
 
-    // Bind address to server. Handle exceptions.
     if (const auto status = bind(server, reinterpret_cast<struct sockaddr*>(&server_addr), sizeof(server_addr));
         status < 0) {
         logger.critical("Can not bind address to server.");
         exit(BIND_ADDRESS_FAILED);
     }
 
-    // Let server start listen. Handle exceptions.
     if (const auto status = listen(server, BACKLOG); status < 0) {
         logger.critical("Can not start listen.");
         exit(LISTEN_FAILED);
     }
+
+    logger.info("Server started.");
+    std::cout << "Server is started. Listen on port " << server_addr.sin_port << "." << std::endl;
 
     while (true) {
         sockaddr_in client_addr { };
@@ -62,18 +65,15 @@ void Server::handle_login(const Stream& stream)
         }
 
         const auto username = message["username"], password = message["password"];
-        if (const auto check_result = database.check_identity(username, password);
-            check_result == ErrorMsg::USER_NOT_FOUND)
-            stream.send_msg(std::format(STATUS_WITH_MEG, Status::FAILED, ErrorMsg::USER_NOT_FOUND));
-        else if (check_result == ErrorMsg::WRONG_PASSWORD)
-            stream.send_msg(std::format(STATUS_WITH_MEG, Status::FAILED, ErrorMsg::WRONG_PASSWORD));
-        else if (check_result == ErrorMsg::SQL_INJECTION) {
-            stream.send_msg(std::format(STATUS_WITH_MEG, Status::FAILED, ErrorMsg::SQL_INJECTION));
-            logger.warning(std::format("User may try to do SQL injection with input: {} & {}", username, password));
-        } else if (check_result == Status::SUCCESS) {
-            stream.send_msg(std::format(STATUS_ONLY, Status::SUCCESS));
-            logger.info(std::format("User {} successfully logged in.", message["user"]));
-            return;
+        try {
+            const auto login_user_status = database.check_identity(username, password);
+            stream.send_msg(login_user_status.message());
+            logger.info(std::format("User {} successfully logged in.", username));
+            break;
+        } catch (const DatabaseException& err) {
+            if (err.what() == ErrorMsg::SQL_INJECTION)
+                logger.warning(std::format("User may try to do SQL injection with input: {} & {}", username, password));
+            stream.send_msg(std::format(FAILED_WITH_MSG, Status::FAILED, err.what()));
         }
     }
 }
