@@ -46,14 +46,21 @@ int Client::login() const
         return false;
     }
 
-    if (const auto message = receive_msg(); message["status"] == Status::SUCCESS) {
+    const auto message = receive_msg();
+    if (message["status"] == MsgStatus::SUCCESS && std::stoi(message["user_status"]) == UserStatus::NORMAL) {
         std::cout << "Welcome, " << username << "!" << std::endl;
-        return true;
-    } else if (message["status"] == Status::FAILED && message["message"] == ErrorMsg::USER_NOT_FOUND) {
-        std::cout << "You have not register yet. Check your name or contact operator." << std::endl;
-    } else if (message["status"] == Status::FAILED && message["message"] == ErrorMsg::WRONG_PASSWORD) {
-        std::cout << "Your password is not correct. Please try again." << std::endl;
+        return std::stoi(message["permission"]);
     }
+
+    if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::USER_NOT_FOUND)
+        std::cout << "You have not register yet. Check your name or contact operator." << std::endl;
+    else if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::WRONG_PASSWORD)
+        std::cout << "Your password is not correct. Please try again." << std::endl;
+
+    else if (std::stoi(message["user_status"]) == UserStatus::DELETED)
+        std::cout << "Your account has been deleted. Contact operator for help." << std::endl;
+    else if (std::stoi(message["user_status"]) == UserStatus::FROZEN)
+        std::cout << "Your account has been frozen. Please contact operator." << std::endl;
 
     return false;
 }
