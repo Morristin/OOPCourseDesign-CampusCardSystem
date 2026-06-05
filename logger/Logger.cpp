@@ -18,6 +18,8 @@ Logger::Logger(const std::string& file_name)
 void Logger::write(const std::string& level, const std::string& msg)
 {
     const auto tt = time(nullptr);
+
+    std::lock_guard lock(log_mutex);
     log_file << std::put_time(std::localtime(&tt), date_format);
     log_file << std::format(log_format, level, module_name, msg);
     log_file << std::flush;

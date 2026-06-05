@@ -3,12 +3,15 @@
 
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <string>
 
 class Logger {
 private:
     static constexpr std::string log_name = LOG_FILE;
     std::string module_name;
+
+    std::mutex log_mutex;
     std::ofstream log_file;
 
     static constexpr auto log_format = " [{}]\n{}: {}\n";
