@@ -26,8 +26,10 @@ void Database::initialize() const
 LoginUserStatus Database::check_identity(const std::string& username, const std::string& password)
 {
     if (constexpr auto SQL = "SELECT Password, Permission, Status, CardNumber FROM Users WHERE Username = ?";
-        sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK)
-        throw DatabaseException(ErrorMsg::SQL_INJECTION);
+        sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK) {
+        logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
+        throw DatabaseException(ErrorMsg::FINDING_FAILED);
+    }
 
     sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
     if (sqlite3_step(cursor) != SQLITE_ROW)

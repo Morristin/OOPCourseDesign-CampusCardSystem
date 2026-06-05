@@ -71,9 +71,9 @@ void Server::handle_login(const Stream& stream)
             logger.info(std::format("User {} successfully logged in.", username));
             break;
         } catch (const DatabaseException& err) {
-            if (err.what() == ErrorMsg::SQL_INJECTION)
-                logger.warning(std::format("User may try to do SQL injection with input: {} & {}", username, password));
-            stream.send_msg(std::format(FAILED_WITH_MSG, Status::FAILED, err.what()));
+            if (err.what() == ErrorMsg::FINDING_FAILED)
+                logger.warning(std::format("Can not find user: {}. Check database and SQL script.", username));
+            stream.send_msg(std::format(FAILED_WITH_MSG, MsgStatus::FAILED, err.what()));
         }
     }
 }
