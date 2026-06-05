@@ -7,7 +7,7 @@
 
 class Logger {
 private:
-    static constexpr std::string log_name = "log.log";
+    static constexpr std::string log_name = LOG_FILE;
     std::string module_name;
     std::ofstream log_file;
 
