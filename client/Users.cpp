@@ -4,24 +4,27 @@
 
 void User::show_dashboard()
 {
-    while (true) {
-        auto current_dashboard = dashboard;
+    auto current_dashboard = dashboard;
 
+    while (true) {
+        std::cout << "Enter the number index before commands to execute them. Enter 'h' for help." << std::endl;
         for (int index = 1; index <= current_dashboard.length(); index++)
             std::cout << index << ". " << current_dashboard[index].name << ": " << current_dashboard[index].description << std::endl;
 
-        char choice = '0';
-        while (!(choice >= '1' && (choice - '0') <= current_dashboard.length())) {
+        std::string choice;
+        while (true) {
             std::cin >> choice;
 
-            if (choice != 'b' && choice != 'o' && choice != 'q' && choice != 'h' && (choice < '0' || choice > '9'))
-                std::cout << "The input character is invalid. Enter 'h' for help.";
-            else if (choice >= '0' && choice <= '9' && (choice == '0' || (choice - '0') > current_dashboard.length()))
-                std::cout << std::format("The input number is invalid. You can only type 1 - {}", current_dashboard.length());
+            if (choice.size() != 1 || choice != "b" && choice != "q" && choice != "h" && (choice < "0" || choice > "9"))
+                std::cout << "The input character is invalid. Enter 'h' for help." << std::endl;
+            else if (choice >= "0" && choice <= "9" && (choice == "0" || std::stoi(choice) > current_dashboard.length()))
+                std::cout << std::format("The input number is invalid. You can only type 1 - {}", current_dashboard.length()) << std::endl;
+            else
+                break;
         }
 
         // Special options: Navigate Back, Quit and Help.
-        switch (choice) {
+        switch (choice[0]) {
         case 'b':
             current_dashboard = current_dashboard.previous_dashboard();
             continue;
@@ -37,9 +40,11 @@ void User::show_dashboard()
         }
 
         // Execute the action of menuitem or dive into deeper dashboard.
-        if (std::holds_alternative<Dashboard*>(current_dashboard[choice - '0'].value))
-            current_dashboard = *std::get<Dashboard*>(current_dashboard[choice - '0'].value);
+        if (std::holds_alternative<Dashboard*>(current_dashboard[std::stoi(choice)].value))
+            current_dashboard = *std::get<Dashboard*>(current_dashboard[std::stoi(choice)].value);
         else
-            std::get<std::function<void()>>(current_dashboard[choice - '0'].value)();
+            std::get<std::function<void()>>(current_dashboard[std::stoi(choice)].value)();
+
+        std::cout << std::endl;
     }
 }
