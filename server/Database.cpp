@@ -6,21 +6,37 @@ static auto logger = Logger(__FILE__);
 
 Database::Database(const std::string& database_path)
 {
-    if (const int status = sqlite3_open(database_path.c_str(), &database); status != SQLITE_OK) {
+    if (const int status = sqlite3_open(database_path.c_str(), &database); status != SQLITE_OK)
         logger.critical(std::format("Can not connect to database: {}", database_path));
-    }
+    else
+        this->initialize();
 }
 
 void Database::initialize() const
 {
-    constexpr auto SQL = "CREATE TABLE IF NOT EXISTS Users ("
-                         "Username TEXT PRIMARY KEY, "
-                         "Password TEXT NOT NULL, "
-                         "Permission INT NOT NULL, "
-                         "Status INT NOT NULL, "
-                         "CardNumber TEXT UNIQUE );";
+    constexpr auto SQL_CREATE_TABLE_USERS = "CREATE TABLE IF NOT EXISTS Users ("
+                                            "Username TEXT PRIMARY KEY, "
+                                            "Password TEXT NOT NULL, "
+                                            "Permission INTEGER NOT NULL, "
+                                            "Status INTEGER NOT NULL, "
+                                            "CardNumber TEXT UNIQUE );";
+    constexpr auto SQL_CREATE_TABLE_USERINFO = "CREATE TABLE IF NOT EXISTS UserInfo ("
+                                               "Username TEXT PRIMARY KEY, "
+                                               "RealName TEXT NOT NULL, "
+                                               "Gender INTEGER NOT NULL, "
+                                               "StudentID TEXT NOT NULL UNIQUE, "
+                                               "Department TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_TRANSACTIONS = "CREATE TABLE IF NOT EXISTS Transactions ("
+                                                   "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                                   "CardNumber TEXT NOT NULL,"
+                                                   "Amount REAL NOT NULL, "
+                                                   "Balance REAL NOT NULL, "
+                                                   "TransactionTime TEXT NOT NULL,"
+                                                   "Operator TEXT );";
 
-    sqlite3_exec(database, SQL, nullptr, nullptr, nullptr);
+    sqlite3_exec(database, SQL_CREATE_TABLE_USERS, nullptr, nullptr, nullptr);
+    sqlite3_exec(database, SQL_CREATE_TABLE_USERINFO, nullptr, nullptr, nullptr);
+    sqlite3_exec(database, SQL_CREATE_TABLE_TRANSACTIONS, nullptr, nullptr, nullptr);
 }
 
 LoginUserStatus Database::check_identity(const std::string& username, const std::string& password)
