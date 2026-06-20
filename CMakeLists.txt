@@ -9,12 +9,12 @@ find_package(SQLite3 REQUIRED)
 target_link_libraries(Server PRIVATE SQLite::SQLite3)
 
 target_sources(Server
-    PRIVATE
+        PRIVATE
         logger/Logger.cpp
         stream/Stream.cpp
         stream/Parser.cpp
         stream/protocol.h
-    PUBLIC
+        PUBLIC
         server/Database.cpp
         server/Server.cpp
         server/main.cpp
@@ -24,12 +24,13 @@ add_executable(Client)
 target_compile_definitions(Client PRIVATE LOG_FILE="client.log")
 
 target_sources(Client
-    PRIVATE
+        PRIVATE
         logger/Logger.cpp
         stream/Stream.cpp
         stream/Parser.cpp
         stream/protocol.h
-    PUBLIC
+        client/Users.cpp
+        PUBLIC
         client/Client.cpp
         client/main.cpp
 )

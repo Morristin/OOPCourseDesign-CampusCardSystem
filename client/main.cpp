@@ -1,10 +1,26 @@
 #include "Client.h"
+#include "Users.h"
 
 #include <iostream>
+
+std::unique_ptr<User> get_user(Client& client, const UserInformation& user_information)
+{
+    if (user_information.permission == 4)
+        return std::make_unique<Student>(client, user_information);
+    else if (user_information.permission == 6)
+        return std::make_unique<Operator>(client, user_information);
+    else if (user_information.permission == 7)
+        return std::make_unique<SuperOperator>(client, user_information);
+    else
+        throw std::runtime_error("Unknown permission level");
+}
 
 int main()
 {
     std::cout << "Welcome to Campus Card Management System." << std::endl;
 
-    const auto client = Client().start();
+    auto client = Client().start();
+    const auto user_information = UserInformation(client.login());
+    const auto user = get_user(client, user_information);
+    return user->dashboard();
 }
