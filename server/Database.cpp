@@ -58,7 +58,7 @@ LoginUserStatus Database::check_identity(const std::string& username, const std:
     const auto permission = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
     const auto status = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 2));
     const auto card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
-    return { permission, status, card_number };
+    return { username, permission, status, card_number };
 }
 
 void Database::add_operator(const std::string& username, const std::string& password)
