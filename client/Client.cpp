@@ -14,7 +14,7 @@ Client::Client(const std::string& ip, int port) : Client()
     this->port = htons(port);
 }
 
-void Client::start() const
+Client Client::start() const
 {
     sockaddr_in server_addr { };
     server_addr.sin_family = SIN_FAMILY;
@@ -29,9 +29,10 @@ void Client::start() const
     }
 
     logger.info(std::format("Client started and connected to server: {}:{}", address, port));
+    return *this;
 }
 
-int Client::login() const
+Parser Client::login() const
 {
     while (true) {
         std::string username, password;
@@ -48,7 +49,7 @@ int Client::login() const
 
         if (message["status"] == MsgStatus::SUCCESS && std::stoi(message["user_status"]) == UserStatus::NORMAL) {
             std::cout << "Welcome, " << username << "!" << std::endl;
-            return std::stoi(message["permission"]);
+            return message;
         }
 
         if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::USER_NOT_FOUND)

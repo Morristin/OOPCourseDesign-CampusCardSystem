@@ -6,7 +6,5 @@ int main()
 {
     std::cout << "Welcome to Campus Card Management System." << std::endl;
 
-    const auto client = Client();
-    client.start();
-    auto permission = client.login();
+    const auto client = Client().start();
 }

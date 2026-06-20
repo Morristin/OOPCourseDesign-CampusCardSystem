@@ -29,8 +29,8 @@ public:
     void send_msg(const std::string& msg) const { stream.send_msg(msg); }
     [[nodiscard]] Parser receive_msg() const { return stream.receive_msg(); }
 
-    void start() const;
-    [[nodiscard]] int login() const;
+    Client start() const; // NOLINT(*-use-nodiscard)
+    [[nodiscard]] Parser login() const;
 };
 
 #endif
