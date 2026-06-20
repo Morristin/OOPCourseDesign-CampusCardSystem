@@ -21,6 +21,5 @@ int main()
 
     auto client = Client().start();
     const auto user_information = UserInformation(client.login());
-    const auto user = get_user(client, user_information);
-    return user->dashboard();
+    get_user(client, user_information)->show_dashboard();
 }

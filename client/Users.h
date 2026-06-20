@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "Client.h"
+#include "Dashboard.h"
 
 struct UserInformation {
     const std::string username;
@@ -18,30 +19,28 @@ class User {
 protected:
     const Client& client;
     const UserInformation user_information;
+    const Dashboard dashboard = { };
 
 public:
     User(const Client& client, UserInformation user_information) : client(client), user_information(std::move(user_information)) { };
     virtual ~User() = default;
 
-    virtual int dashboard();
+    virtual void show_dashboard();
 };
 
 class Student : public User {
 public:
     Student(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };
-    int dashboard() override;
 };
 
 class Operator : public User {
 public:
     Operator(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };
-    int dashboard() override;
 };
 
 class SuperOperator : public User {
 public:
     SuperOperator(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };
-    int dashboard() override;
 };
 
 #endif
