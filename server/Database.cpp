@@ -19,7 +19,7 @@ void Database::initialize() const
                                             "Password TEXT NOT NULL, "
                                             "Permission INTEGER NOT NULL, "
                                             "Status INTEGER NOT NULL, "
-                                            "CardNumber TEXT UNIQUE );";
+                                            "CardNumber TEXT NOT NULL );";
     constexpr auto SQL_CREATE_TABLE_USERINFO = "CREATE TABLE IF NOT EXISTS UserInfo ("
                                                "Username TEXT PRIMARY KEY, "
                                                "RealName TEXT NOT NULL, "
@@ -44,7 +44,7 @@ LoginUserStatus Database::check_identity(const std::string& username, const std:
     if (constexpr auto SQL = "SELECT Password, Permission, Status, CardNumber FROM Users WHERE Username = ?";
         sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK) {
         logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
-        throw DatabaseException(ErrorMsg::FINDING_FAILED);
+        throw DatabaseException(ErrorMsg::DATABASE_FIND_USER_FAILED);
     }
 
     sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
@@ -59,4 +59,21 @@ LoginUserStatus Database::check_identity(const std::string& username, const std:
     const auto status = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 2));
     const auto card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
     return { permission, status, card_number };
+}
+
+void Database::add_operator(const std::string& username, const std::string& password)
+{
+    if (constexpr auto SQL = "INSERT INTO Users (Username, Password, Permission, Status, CardNumber) VALUES (?, ?, ?, ?, ?)"; sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK)
+        logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
+
+    sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 2, password.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(cursor, 3, Permission::OPERATOR);
+    sqlite3_bind_int(cursor, 4, UserStatus::NORMAL);
+    sqlite3_bind_text(cursor, 5, "NULL", -1, SQLITE_STATIC);
+
+    if (sqlite3_step(cursor) != SQLITE_DONE)
+        throw DatabaseException(ErrorMsg::USER_ALREADY_EXISTS);
+
+    logger.info(std::format("Successfully added new operator {} with password {}", username, password));
 }

@@ -44,36 +44,49 @@ static auto logger = Logger(__FILE__);
             continue;
         }
 
-        auto stream = Stream(client);
+        const auto stream = Stream(client);
+
         try {
-            handle_login(stream);
+            while (true) {
+                auto msg = stream.receive_msg();
+
+                if (std::string action = msg["action"]; action == "login")
+                    handle_login(stream, msg);
+                else if (action == "add_operator")
+                    handle_add_operator(stream, msg);
+            }
         } catch (const std::exception& err) {
             logger.warning(std::format("Client handling error: {}", err.what()));
+            close(client);
         }
-
-        close(client);
     }
 }
 
-void Server::handle_login(const Stream& stream)
+void Server::handle_login(const Stream& stream, const Parser& message)
 {
-    while (true) {
-        auto message = stream.receive_msg();
-        if (message["action"] != "login") {
-            logger.info(std::format("Expect to get 'login' action. Get {} instead.", message["username"]));
-            continue;
-        }
+    const auto username = message["username"], password = message["password"];
+    try {
+        const auto login_user_status = database.check_identity(username, password);
+        stream.send_msg(login_user_status.message());
+        logger.info(std::format("User {} successfully logged in.", username));
+    } catch (const DatabaseException& err) {
+        if (err.what() == ErrorMsg::DATABASE_FIND_USER_FAILED)
+            logger.warning(std::format("Can not find user: {}. Check database and SQL script.", username));
+        stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+    }
+}
 
-        const auto username = message["username"], password = message["password"];
-        try {
-            const auto login_user_status = database.check_identity(username, password);
-            stream.send_msg(login_user_status.message());
-            logger.info(std::format("User {} successfully logged in.", username));
-            break;
-        } catch (const DatabaseException& err) {
-            if (err.what() == ErrorMsg::FINDING_FAILED)
-                logger.warning(std::format("Can not find user: {}. Check database and SQL script.", username));
-            stream.send_msg(std::format(FAILED_WITH_MSG, MsgStatus::FAILED, err.what()));
-        }
+void Server::handle_add_operator(const Stream& stream, const Parser& message)
+{
+    const std::string username = message["username"];
+    const std::string password = message["password"];
+
+    try {
+        database.add_operator(username, password);
+        stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    } catch (const DatabaseException& err) {
+        if (err.what() == ErrorMsg::USER_ALREADY_EXISTS)
+            logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
+        stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
     }
 }

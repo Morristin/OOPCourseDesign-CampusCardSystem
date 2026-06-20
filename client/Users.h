@@ -19,7 +19,7 @@ class User {
 protected:
     const Client& client;
     const UserInformation user_information;
-    const Dashboard dashboard = { };
+    Dashboard dashboard = { };
 
 public:
     User(const Client& client, UserInformation user_information) : client(client), user_information(std::move(user_information)) { };
@@ -39,8 +39,18 @@ public:
 };
 
 class SuperOperator : public User {
+protected:
+    void add_operator() const;
+    // void delete_operator() const;
+
 public:
-    SuperOperator(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };
+    SuperOperator(const Client& client, UserInformation user_information) : User(client, std::move(user_information))
+    {
+        dashboard = {
+            MenuItem("Add Operator", "add operator", [this] { add_operator(); }),
+            // MenuItem("Delete Operator", "delete operator", [this] { delete_operator(); }),
+        };
+    };
 };
 
 #endif

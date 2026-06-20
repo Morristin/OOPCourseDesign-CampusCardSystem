@@ -43,6 +43,7 @@ target_sources(Client
         stream/Parser.cpp
         stream/protocol.h
         client/Users.cpp
+        client/SuperOperator.cpp
         PUBLIC
         client/Client.cpp
         client/main.cpp

@@ -28,6 +28,8 @@ public:
 
     void initialize() const;
     LoginUserStatus check_identity(const std::string& username, const std::string& password);
+
+    void add_operator(const std::string& username, const std::string& password);
 };
 
 #endif
