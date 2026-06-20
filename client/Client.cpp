@@ -14,7 +14,7 @@ Client::Client(const std::string& ip, int port) : Client()
     this->port = htons(port);
 }
 
-Client Client::start() const
+void Client::start() const
 {
     sockaddr_in server_addr { };
     server_addr.sin_family = SIN_FAMILY;
@@ -29,7 +29,6 @@ Client Client::start() const
     }
 
     logger.info(std::format("Client started and connected to server: {}:{}", address, port));
-    return *this;
 }
 
 Parser Client::login() const

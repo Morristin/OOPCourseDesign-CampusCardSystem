@@ -19,7 +19,9 @@ int main()
 {
     std::cout << "Welcome to Campus Card Management System." << std::endl;
 
-    auto client = Client().start();
+    auto client = Client();
+    client.start();
+
     const auto user_information = UserInformation(client.login());
     get_user(client, user_information)->show_dashboard();
 }
