@@ -46,6 +46,7 @@ target_sources(Client
         client/Users.cpp
         client/SuperOperator.cpp
         client/Operator.cpp
+        client/Student.cpp
         PUBLIC
         client/Client.cpp
         client/main.cpp

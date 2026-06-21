@@ -5,22 +5,19 @@
 
 void Operator::recharge() const
 {
-    std::string card_number, amount_str;
+    std::string card_number, amount_string;
     std::cout << "Enter the card number and recharge amount: " << std::endl;
-    std::cin >> card_number >> amount_str;
+    std::cin >> card_number >> amount_string;
 
-    double amount;
     try {
-        amount = std::stod(amount_str);
+        double amount = std::stod(amount_string);
+        client.send_msg(std::format(ACTION_RECHARGE, card_number, std::format("{:.2f}", amount)));
     } catch (const std::exception&) {
         std::cout << "Invalid recharge amount format. You should enter a valid float." << std::endl;
         return;
     }
 
-    client.send_msg(std::format(ACTION_RECHARGE, card_number, std::format("{:.2f}", amount)));
-
-    const auto response = client.receive_msg();
-    if (response["status"] == MsgStatus::SUCCESS)
+    if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
         std::cout << "Recharge successful." << std::endl;
     else if (response["message"] == ErrorMsg::CARD_NOT_FOUND)
         std::cout << "Failed to recharge. The card number does not exist." << std::endl;

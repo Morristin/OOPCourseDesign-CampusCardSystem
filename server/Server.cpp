@@ -87,8 +87,6 @@ void Server::handle_login(Session& session)
         session.stream.send_msg(login_user_status.message());
         logger.info(std::format("User {} successfully logged in.", username));
     } catch (const DatabaseException& err) {
-        if (err.what() == ErrorMsg::DATABASE_FIND_USER_FAILED)
-            logger.warning(std::format("Can not find user: {}. Check database and SQL script.", username));
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
     }
 }
@@ -129,6 +127,20 @@ void Server::handle_recharge(const Session& session)
 
     try {
         database.recharge_card(card_number, amount, session.username);
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    } catch (const DatabaseException& err) {
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+    }
+}
+
+void Server::handle_consume(const Session& session)
+{
+    const std::string card_number = session.message["card_number"];
+    const double amount = std::stod(session.message["amount"]);
+    const std::string merchant = session.message["merchant"];
+
+    try {
+        database.consume_card(card_number, amount, merchant);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
     } catch (const DatabaseException& err) {
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));

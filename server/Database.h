@@ -35,6 +35,7 @@ public:
     void del_operator(const std::string& username);
 
     void recharge_card(const std::string& card_number, double amount, const std::string& operator_name);
+    void consume_card(const std::string& card_number, double amount, const std::string& merchant);
 };
 
 #endif

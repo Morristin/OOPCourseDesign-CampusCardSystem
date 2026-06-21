@@ -65,7 +65,7 @@ Parser Client::login() const
 
         if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::USER_NOT_FOUND)
             std::cout << "You have not register yet. Check your name or contact operator." << std::endl;
-        else if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::WRONG_PASSWORD)
+        else if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::PASSWORD_WRONG)
             std::cout << "Your password is not correct. Please try again." << std::endl;
 
         else if (std::stoi(message["user_status"]) == UserStatus::DELETED)

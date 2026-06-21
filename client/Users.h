@@ -29,8 +29,16 @@ public:
 };
 
 class Student : public User {
+protected:
+    void consume() const;
+
 public:
-    Student(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };
+    Student(const Client& client, UserInformation user_information) : User(client, std::move(user_information))
+    {
+        dashboard = {
+            MenuItem("Consume", "Consume the money with the amount and merchant provided by money receiver.", [this] { consume(); }),
+        };
+    };
 };
 
 class Operator : public User {
