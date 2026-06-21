@@ -104,7 +104,7 @@ void Server::handle_add_operator(const Session& session)
     } catch (const DatabaseException& err) {
         if (err.what() == ErrorMsg::USER_ALREADY_EXISTS)
             logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::USER_ALREADY_EXISTS));
     }
 }
 
@@ -118,6 +118,19 @@ void Server::handle_del_operator(const Session& session)
     } catch (const DatabaseException& err) {
         if (err.what() == ErrorMsg::USER_NOT_FOUND)
             logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::USER_NOT_FOUND));
+    }
+}
+
+void Server::handle_recharge(const Session& session)
+{
+    const std::string card_number = session.message["card_number"];
+    const double amount = std::stod(session.message["amount"]);
+
+    try {
+        database.recharge_card(card_number, amount, session.username);
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    } catch (const DatabaseException& err) {
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
     }
 }

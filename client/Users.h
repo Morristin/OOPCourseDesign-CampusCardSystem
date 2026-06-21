@@ -34,8 +34,16 @@ public:
 };
 
 class Operator : public User {
+protected:
+    void recharge() const;
+
 public:
-    Operator(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };
+    Operator(const Client& client, UserInformation user_information) : User(client, std::move(user_information))
+    {
+        dashboard = {
+            MenuItem("Recharge", "Recharge money into specific card.", [this] { recharge(); }),
+        };
+    };
 };
 
 class SuperOperator : public User {

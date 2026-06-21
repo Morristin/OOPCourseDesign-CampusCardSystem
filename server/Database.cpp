@@ -69,8 +69,8 @@ void Database::add_operator(const std::string& username, const std::string& pass
 {
     std::lock_guard<std::mutex> lock(database_mutex);
 
-    if (constexpr auto SQL = "INSERT INTO Users (Username, Password, Permission, Status, CardNumber) VALUES (?, ?, ?, ?, ?)"; sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK)
-        logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
+    constexpr auto SQL = "INSERT INTO Users (Username, Password, Permission, Status, CardNumber) VALUES (?, ?, ?, ?, ?)";
+    sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);
 
     sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(cursor, 2, password.c_str(), -1, SQLITE_STATIC);
@@ -88,9 +88,8 @@ void Database::del_operator(const std::string& username)
 {
     std::lock_guard<std::mutex> lock(database_mutex);
 
-    if (constexpr auto SQL = "DELETE FROM Users WHERE Username = ? AND Permission = ?"; sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK)
-        logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
-
+    constexpr auto SQL = "DELETE FROM Users WHERE Username = ? AND Permission = ?";
+    sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_int(cursor, 2, Permission::OPERATOR);
 
@@ -102,4 +101,38 @@ void Database::del_operator(const std::string& username)
         throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
 
     logger.info(std::format("Successfully deleted operator {}", username));
+}
+
+void Database::recharge_card(const std::string& card_number, double amount, const std::string& operator_name)
+{
+    // Check whether the card number exist and account is in normal status.
+    sqlite3_prepare_v2(database, "SELECT Status FROM Users WHERE CardNumber = ?", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
+
+    if (sqlite3_step(cursor) != SQLITE_ROW)
+        throw DatabaseException(ErrorMsg::CARD_NOT_FOUND);
+    if (sqlite3_column_int(cursor, 0) != UserStatus::NORMAL)
+        throw DatabaseException(ErrorMsg::ACCOUNT_ABNORMAL);
+
+    // Get current balance from table Transactions. If there is no record in Transactions, use default value 0.
+    double old_balance = 0.0;
+    constexpr auto SQL_GET = "SELECT Balance FROM Transactions WHERE CardNumber = ? ORDER BY ID DESC LIMIT 1";
+    sqlite3_prepare_v2(database, SQL_GET, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
+
+    if (sqlite3_step(cursor) == SQLITE_ROW)
+        old_balance = sqlite3_column_double(cursor, 0);
+
+    // Calculate new balance and insert recharge record into Transactions.
+    double new_balance = old_balance + amount;
+    constexpr auto SQL_INSERT = "INSERT INTO Transactions (CardNumber, Amount, Balance, TransactionTime, Operator) "
+                                "VALUES (?, ?, ?, datetime('now', 'localtime'), ?)";
+    sqlite3_prepare_v2(database, SQL_INSERT, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_double(cursor, 2, amount);
+    sqlite3_bind_double(cursor, 3, new_balance);
+    sqlite3_bind_text(cursor, 4, operator_name.c_str(), -1, SQLITE_STATIC);
+
+    sqlite3_step(cursor);
+    logger.info(std::format("Recharged {} to card {}. New balance: {}.", amount, card_number, new_balance));
 }

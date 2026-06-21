@@ -42,8 +42,10 @@ target_sources(Client
         stream/Stream.cpp
         stream/Parser.cpp
         stream/protocol.h
+        # Users: SuperOP, OP and Student.
         client/Users.cpp
         client/SuperOperator.cpp
+        client/Operator.cpp
         PUBLIC
         client/Client.cpp
         client/main.cpp

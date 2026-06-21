@@ -39,6 +39,7 @@ private:
         { "login", { 0, [this](Session& s) { handle_login(s); } } },
         { "add_operator", { Permission::ADMIN, [this](const Session& s) { handle_add_operator(s); } } },
         { "del_operator", { Permission::ADMIN, [this](const Session& s) { handle_del_operator(s); } } },
+        { "recharge", { Permission::OPERATOR, [this](const Session& s) { handle_recharge(s); } } },
     };
 
 public:
@@ -50,6 +51,8 @@ public:
 
     void handle_add_operator(const Session& session);
     void handle_del_operator(const Session& session);
+
+    void handle_recharge(const Session& session);
 };
 
 #endif

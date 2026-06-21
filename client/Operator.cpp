@@ -1,0 +1,29 @@
+#include "../stream/protocol.h"
+#include "Users.h"
+
+#include <iostream>
+
+void Operator::recharge() const
+{
+    std::string card_number, amount_str;
+    std::cout << "Enter the card number and recharge amount: " << std::endl;
+    std::cin >> card_number >> amount_str;
+
+    double amount;
+    try {
+        amount = std::stod(amount_str);
+    } catch (const std::exception&) {
+        std::cout << "Invalid recharge amount format. You should enter a valid float." << std::endl;
+        return;
+    }
+
+    client.send_msg(std::format(ACTION_RECHARGE, card_number, std::format("{:.2f}", amount)));
+
+    const auto response = client.receive_msg();
+    if (response["status"] == MsgStatus::SUCCESS)
+        std::cout << "Recharge successful." << std::endl;
+    else if (response["message"] == ErrorMsg::CARD_NOT_FOUND)
+        std::cout << "Failed to recharge. The card number does not exist." << std::endl;
+    else if (response["message"] == ErrorMsg::ACCOUNT_ABNORMAL)
+        std::cout << "Failed to recharge. The account is frozen or deleted." << std::endl;
+}

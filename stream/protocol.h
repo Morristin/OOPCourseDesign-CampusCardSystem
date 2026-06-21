@@ -15,8 +15,10 @@ constexpr std::string_view PERMISSION_DENIED = "PermissionDenied";
 
 constexpr std::string_view USER_NOT_FOUND = "UserNotFound";
 constexpr std::string_view USER_ALREADY_EXISTS = "UserAlreadyExists";
+constexpr std::string_view CARD_NOT_FOUND = "CardNotFound";
 
 constexpr std::string_view WRONG_PASSWORD = "WrongPassword";
+constexpr std::string_view ACCOUNT_ABNORMAL = "AccountAbnormal";
 
 constexpr std::string_view DATABASE_FIND_USER_FAILED = "FailedToFindUser";
 }
@@ -48,5 +50,7 @@ struct LoginUserStatus {
 
 constexpr auto ACTION_ADD_OPERATOR = "action:add_operator,username:{},password:{}";
 constexpr auto ACTION_DELETE_OPERATOR = "action:del_operator,username:{}";
+
+constexpr auto ACTION_RECHARGE = "action:recharge,card_number:{},amount:{}";
 
 #endif

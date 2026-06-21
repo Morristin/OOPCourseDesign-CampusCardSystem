@@ -33,6 +33,8 @@ public:
 
     void add_operator(const std::string& username, const std::string& password);
     void del_operator(const std::string& username);
+
+    void recharge_card(const std::string& card_number, double amount, const std::string& operator_name);
 };
 
 #endif
