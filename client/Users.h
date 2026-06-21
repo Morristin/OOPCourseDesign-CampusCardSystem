@@ -19,26 +19,28 @@ class User {
 protected:
     const Client& client;
     const UserInformation user_information;
+
     Dashboard dashboard = { };
+    [[nodiscard]] virtual Dashboard main_dashboard() const { return dashboard; }
 
 public:
     User(const Client& client, UserInformation user_information) : client(client), user_information(std::move(user_information)) { };
     virtual ~User() = default;
 
-    virtual void show_dashboard();
+    void show_dashboard() const;
 };
 
 class Student : public User {
 protected:
     void consume() const;
 
-public:
-    Student(const Client& client, UserInformation user_information) : User(client, std::move(user_information))
-    {
-        dashboard = {
-            MenuItem("Consume", "Consume the money with the amount and merchant provided by money receiver.", [this] { consume(); }),
-        };
+    [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
+    Dashboard dashboard = {
+        MenuItem("Consume", "Consume the money with the amount and merchant provided by money receiver.", [this] { consume(); }),
     };
+
+public:
+    Student(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };
 };
 
 class Operator : public User {
@@ -47,32 +49,37 @@ protected:
     void recharge() const;
     void manage_accounts() const;
 
-public:
-    Operator(const Client& client, UserInformation user_information) : User(client, std::move(user_information))
-    {
-        dashboard = {
-            MenuItem("Add Account", "Add normal student account.", [this] { add_student(); }),
-            MenuItem("Manage Accounts", "Freeze, delete or restore accounts.", [this] { manage_accounts(); }),
-            MenuItem("Recharge", "Recharge money into specific card.", [this] { recharge(); }),
-        };
+    [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
+
+    Dashboard student_management = {
+        MenuItem("Add Account", "Add student account with student information", [this] { add_student(); })
     };
+
+    Dashboard dashboard = {
+        MenuItem("Manage Student Information", "Add, modify and delete student account.", &student_management),
+        MenuItem("Manage Student Accounts", "Freeze, delete or restore accounts.", [this] { manage_accounts(); }),
+        MenuItem("Recharge", "Recharge money into specific card.", [this] { recharge(); }),
+    };
+
+public:
+    Operator(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };
 };
 
-class SuperOperator : public User {
+class SuperOperator : public Operator {
 protected:
     void add_operator() const;
     void delete_operator() const;
     void reset_operator_password() const;
 
-public:
-    SuperOperator(const Client& client, UserInformation user_information) : User(client, std::move(user_information))
-    {
-        dashboard = {
-            MenuItem("Add Operator", "Add an operator.", [this] { add_operator(); }),
-            MenuItem("Delete Operator", "Delete a exist operator.", [this] { delete_operator(); }),
-            MenuItem("Reset Operator Password", "Reset a exist operator's password.", [this] { delete_operator(); }),
-        };
+    [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
+    Dashboard dashboard = {
+        MenuItem("Add Operator", "Add an operator.", [this] { add_operator(); }),
+        MenuItem("Delete Operator", "Delete a exist operator.", [this] { delete_operator(); }),
+        MenuItem("Reset Operator Password", "Reset a exist operator's password.", [this] { delete_operator(); }),
     };
+
+public:
+    SuperOperator(const Client& client, UserInformation user_information) : Operator(client, std::move(user_information)) { };
 };
 
 #endif

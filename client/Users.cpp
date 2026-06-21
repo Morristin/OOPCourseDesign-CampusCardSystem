@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-void User::show_dashboard()
+void User::show_dashboard() const
 {
-    auto current_dashboard = dashboard;
+    auto current_dashboard = main_dashboard();
 
     while (true) {
         std::cout << "Enter the number index before commands to execute them. Enter 'h' for help." << std::endl;
