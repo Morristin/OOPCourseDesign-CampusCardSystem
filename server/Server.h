@@ -9,6 +9,7 @@
 
 struct Session {
     Stream& stream;
+    std::string username;
     int permission = Permission::DEFAULT;
     Parser message;
 };

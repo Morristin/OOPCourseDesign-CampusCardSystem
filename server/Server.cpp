@@ -46,7 +46,7 @@ Server::Server()
             auto client_logger = Logger(std::format("Client {}", client));
 
             auto stream = Stream(client);
-            Session session { stream, Permission::DEFAULT, Parser("") };
+            Session session { stream, "", Permission::DEFAULT, Parser("") };
 
             try {
                 while (true) {
@@ -81,6 +81,7 @@ void Server::handle_login(Session& session)
 
     try {
         const auto login_user_status = database.check_identity(username, password);
+        session.username = login_user_status.username;
         session.permission = std::stoi(login_user_status.permission.data());
 
         session.stream.send_msg(login_user_status.message());
