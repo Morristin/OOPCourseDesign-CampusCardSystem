@@ -62,4 +62,6 @@ void Operator::manage_accounts() const
         std::cout << OutputType::SUCCESS << "Account status updated successfully." << OutputType::RESET << std::endl;
     else if (response["message"] == ErrorMsg::USER_NOT_FOUND)
         std::cout << OutputType::ERROR << "Failed to update states. Username does not exist." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::TARGET_NOT_STUDENT)
+        std::cout << OutputType::ERROR << "Failed to update states. You can only manage student accounts." << OutputType::RESET << std::endl;
 }

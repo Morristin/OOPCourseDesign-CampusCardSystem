@@ -15,6 +15,7 @@ constexpr std::string_view PERMISSION_DENIED = "PermissionDenied";
 
 constexpr std::string_view USER_NOT_FOUND = "UserNotFound";
 constexpr std::string_view USER_ALREADY_EXISTS = "UserAlreadyExists";
+constexpr std::string_view TARGET_NOT_STUDENT = "TargetNotStudent";
 constexpr std::string_view USERINFO_EXISTS = "UserInfoAlreadyExists";
 constexpr std::string_view CARD_NOT_FOUND = "CardNotFound";
 constexpr std::string_view ACCOUNT_ABNORMAL = "AccountAbnormal";

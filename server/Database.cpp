@@ -149,11 +149,14 @@ void Database::recharge_card(const std::string& card_number, double amount, cons
 
 void Database::update_account_status(const std::string& username, const int new_status)
 {
-    // Check whether the username exist.
-    sqlite3_prepare_v2(database, "SELECT Username FROM Users WHERE Username = ?", -1, &cursor, nullptr);
+    // Check whether the username exist, and whether the user is student.
+    sqlite3_prepare_v2(database, "SELECT Permission FROM Users WHERE Username = ?", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
+
     if (sqlite3_step(cursor) != SQLITE_ROW)
         throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
+    if (const int target_permission = sqlite3_column_int(cursor, 0); target_permission != Permission::STUDENT)
+        throw DatabaseException(ErrorMsg::TARGET_NOT_STUDENT);
 
     // Update the status of the specific user.
     sqlite3_prepare_v2(database, "UPDATE Users SET Status = ? WHERE Username = ?", -1, &cursor, nullptr);
