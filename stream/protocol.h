@@ -10,6 +10,9 @@ constexpr std::string_view FAILED = "failed";
 }
 
 namespace ErrorMsg {
+constexpr std::string_view UNKNOWN_ACTION = "UnknownAction";
+constexpr std::string_view PERMISSION_DENIED = "PermissionDenied";
+
 constexpr std::string_view USER_NOT_FOUND = "UserNotFound";
 constexpr std::string_view USER_ALREADY_EXISTS = "UserAlreadyExists";
 
@@ -19,7 +22,8 @@ constexpr std::string_view DATABASE_FIND_USER_FAILED = "FailedToFindUser";
 }
 
 namespace Permission {
-constexpr int User = 4;
+constexpr int DEFAULT = 0;
+constexpr int USER = 4;
 constexpr int OPERATOR = 6;
 constexpr int ADMIN = 7;
 }
