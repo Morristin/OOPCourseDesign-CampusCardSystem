@@ -17,11 +17,10 @@ void Student::consume() const
         return;
     }
 
-    if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS) {
-        std::cout << "Consumption performed successful." << std::endl;
-    } else if (response["message"] == ErrorMsg::BALANCE_INSUFFICIENT) {
-        std::cout << "Consumption Failed. You do not have enough balance left." << std::endl;
-    } else if (response["message"] == ErrorMsg::ACCOUNT_ABNORMAL) {
-        std::cout << "Consumption Failed. Your account is frozen or deleted. Please contact operator." << std::endl;
-    }
+    if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
+        std::cout << OutputType::SUCCESS << "Consumption performed successful." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::BALANCE_INSUFFICIENT)
+        std::cout << OutputType::ERROR << "Consumption Failed. You do not have enough balance left." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::ACCOUNT_ABNORMAL)
+        std::cout << OutputType::ERROR << "Consumption Failed. Your account is frozen or deleted. Please contact operator." << OutputType::RESET << std::endl;
 }

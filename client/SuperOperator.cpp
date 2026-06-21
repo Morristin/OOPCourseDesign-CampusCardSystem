@@ -16,9 +16,9 @@ void SuperOperator::add_operator() const
     const auto response = client.receive_msg();
 
     if (response["status"] == MsgStatus::SUCCESS)
-        std::cout << "Operator added successfully." << std::endl;
+        std::cout << OutputType::SUCCESS << "Operator added successfully." << OutputType::RESET << std::endl;
     else if (response["message"] == ErrorMsg::USER_ALREADY_EXISTS)
-        std::cout << "Failed to add operator as username already exist. Please change one and try again." << std::endl;
+        std::cout << OutputType::WARNING << "Failed to add operator as username already exist. Please change one and try again." << OutputType::RESET << std::endl;
 }
 
 void SuperOperator::delete_operator() const
@@ -31,9 +31,9 @@ void SuperOperator::delete_operator() const
     const auto response = client.receive_msg();
 
     if (response["status"] == MsgStatus::SUCCESS)
-        std::cout << "Operator deleted successfully." << std::endl;
+        std::cout << OutputType::SUCCESS << "Operator deleted successfully." << OutputType::RESET << std::endl;
     else if (response["message"] == ErrorMsg::USER_NOT_FOUND)
-        std::cout << "Failed to delete operator as the username does not exist." << std::endl;
+        std::cout << OutputType::WARNING << "Failed to delete operator as the username does not exist." << OutputType::RESET << std::endl;
 }
 
 void SuperOperator::reset_operator_password() const
@@ -44,16 +44,16 @@ void SuperOperator::reset_operator_password() const
 
     client.send_msg(std::format(ACTION_DELETE_OPERATOR, username));
     if (const auto response = client.receive_msg(); response["status"] == MsgStatus::FAILED) {
-        std::cout << "Reset password failed. The operator you entered does not exist." << std::endl;
+        std::cout << OutputType::ERROR << "Reset password failed. The operator you entered does not exist." << OutputType::RESET << std::endl;
         return;
     }
 
     client.send_msg(std::format(ACTION_ADD_OPERATOR, username, new_password));
     if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
-        std::cout << "Password reset successfully." << std::endl;
+        std::cout << OutputType::SUCCESS << "Password reset successfully." << OutputType::RESET << std::endl;
 
     else {
-        std::cout << "Failed to reset password as an unknown error happened." << std::endl;
+        std::cout << OutputType::CRITICAL << "Failed to reset password as an unknown error happened." << OutputType::RESET << std::endl;
         logger.warning(std::format("Unknown error happened while resetting operator's password: {}", response["message"]));
     }
 }

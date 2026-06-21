@@ -18,9 +18,9 @@ void Operator::recharge() const
     }
 
     if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
-        std::cout << "Recharge successful." << std::endl;
+        std::cout << OutputType::SUCCESS << "Recharge successful." << OutputType::RESET << std::endl;
     else if (response["message"] == ErrorMsg::CARD_NOT_FOUND)
-        std::cout << "Failed to recharge. The card number does not exist." << std::endl;
+        std::cout << OutputType::ERROR << "Failed to recharge. The card number does not exist." << OutputType::RESET << std::endl;
     else if (response["message"] == ErrorMsg::ACCOUNT_ABNORMAL)
-        std::cout << "Failed to recharge. The account is frozen or deleted." << std::endl;
+        std::cout << OutputType::ERROR << "Failed to recharge. The account is frozen or deleted." << OutputType::RESET << std::endl;
 }
