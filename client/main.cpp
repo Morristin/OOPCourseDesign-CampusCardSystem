@@ -20,7 +20,7 @@ std::unique_ptr<User> get_user(Client& client, const UserInformation& user_infor
 
 int main()
 {
-    std::cout << OutputType::SUCCESS << "Welcome to Campus Card Management System." << OutputType::RESET << std::endl;
+    std::cout << OutputType::THEME << "Welcome to Campus Card Management System." << OutputType::RESET << std::endl;
 
     try {
         auto client = Client();
