@@ -19,6 +19,8 @@ class Database {
 private:
     static constexpr std::string DATABASE_PATH = "server/data.sqlite3";
     sqlite3* database { };
+
+    static std::mutex database_mutex;
     sqlite3_stmt* cursor { };
 
 public:

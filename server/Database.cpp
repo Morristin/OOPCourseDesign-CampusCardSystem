@@ -4,6 +4,8 @@
 
 static auto logger = Logger(__FILE__);
 
+std::mutex Database::database_mutex;
+
 Database::Database(const std::string& database_path)
 {
     if (const int status = sqlite3_open(database_path.c_str(), &database); status != SQLITE_OK)
@@ -41,6 +43,8 @@ void Database::initialize() const
 
 LoginUserStatus Database::check_identity(const std::string& username, const std::string& password)
 {
+    std::lock_guard<std::mutex> lock(database_mutex);
+
     if (constexpr auto SQL = "SELECT Password, Permission, Status, CardNumber FROM Users WHERE Username = ?";
         sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK) {
         logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
@@ -63,6 +67,8 @@ LoginUserStatus Database::check_identity(const std::string& username, const std:
 
 void Database::add_operator(const std::string& username, const std::string& password)
 {
+    std::lock_guard<std::mutex> lock(database_mutex);
+
     if (constexpr auto SQL = "INSERT INTO Users (Username, Password, Permission, Status, CardNumber) VALUES (?, ?, ?, ?, ?)"; sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK)
         logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
 
@@ -80,6 +86,8 @@ void Database::add_operator(const std::string& username, const std::string& pass
 
 void Database::del_operator(const std::string& username)
 {
+    std::lock_guard<std::mutex> lock(database_mutex);
+
     if (constexpr auto SQL = "DELETE FROM Users WHERE Username = ? AND Permission = ?"; sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK)
         logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
 
