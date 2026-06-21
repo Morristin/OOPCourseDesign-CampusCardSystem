@@ -39,6 +39,7 @@ private:
         { "login", { 0, [this](Session& s) { handle_login(s); } } },
         { "add_operator", { Permission::SUPEROPERATOR, [this](const Session& s) { handle_add_operator(s); } } },
         { "del_operator", { Permission::SUPEROPERATOR, [this](const Session& s) { handle_del_operator(s); } } },
+        { "add_student", { Permission::OPERATOR, [this](const Session& s) { handle_add_student(s); } } },
         { "recharge", { Permission::OPERATOR, [this](const Session& s) { handle_recharge(s); } } },
         { "consume", { Permission::STUDENT, [this](const Session& s) { handle_consume(s); } } }
     };
@@ -52,6 +53,7 @@ public:
 
     void handle_add_operator(const Session& session);
     void handle_del_operator(const Session& session);
+    void handle_add_student(const Session& session);
 
     void handle_recharge(const Session& session);
     void handle_update_status(const Session& session);

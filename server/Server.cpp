@@ -97,7 +97,7 @@ void Server::handle_add_operator(const Session& session)
     const auto password = session.message["password"];
 
     try {
-        database.add_operator(username, password);
+        database.create_account(username, password, Permission::OPERATOR);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
     } catch (const DatabaseException& err) {
         if (err.what() == ErrorMsg::USER_ALREADY_EXISTS)
@@ -117,6 +117,21 @@ void Server::handle_del_operator(const Session& session)
         if (err.what() == ErrorMsg::USER_NOT_FOUND)
             logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::USER_NOT_FOUND));
+    }
+}
+
+void Server::handle_add_student(const Session& session)
+{
+    const std::string real_name = session.message["real_name"];
+    const std::string gender = session.message["gender"];
+    const std::string student_id = session.message["student_id"];
+    const std::string department = session.message["department"];
+
+    try {
+        database.register_student(real_name, gender, student_id, department);
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    } catch (const DatabaseException& err) {
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
     }
 }
 

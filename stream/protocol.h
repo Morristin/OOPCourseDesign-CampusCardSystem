@@ -15,11 +15,16 @@ constexpr std::string_view PERMISSION_DENIED = "PermissionDenied";
 
 constexpr std::string_view USER_NOT_FOUND = "UserNotFound";
 constexpr std::string_view USER_ALREADY_EXISTS = "UserAlreadyExists";
+constexpr std::string_view USERINFO_EXISTS = "UserInfoAlreadyExists";
 constexpr std::string_view CARD_NOT_FOUND = "CardNotFound";
 constexpr std::string_view ACCOUNT_ABNORMAL = "AccountAbnormal";
 
 constexpr std::string_view PASSWORD_WRONG = "PasswordWrong";
 constexpr std::string_view BALANCE_INSUFFICIENT = "BalanceInsufficient";
+}
+
+namespace Password {
+constexpr std::string DEFAULT = "123456";
 }
 
 namespace Permission {
@@ -33,6 +38,10 @@ namespace UserStatus {
 constexpr int NORMAL = 0;
 constexpr int DELETED = -1;
 constexpr int FROZEN = 6;
+}
+
+namespace CardNumber {
+constexpr std::string BLANK = "NULL";
 }
 
 constexpr auto STATUS_WITH_MSG = "status:{},message:{}";
@@ -50,6 +59,7 @@ struct LoginUserStatus {
 constexpr auto ACTION_ADD_OPERATOR = "action:add_operator,username:{},password:{}";
 constexpr auto ACTION_DELETE_OPERATOR = "action:del_operator,username:{}";
 
+constexpr auto ACTION_ADD_STUDENT = "action:add_student,real_name:{},gender:{},student_id:{},department:{}";
 constexpr auto ACTION_RECHARGE = "action:recharge,card_number:{},amount:{}";
 constexpr auto ACTION_UPDATE_STATUS = "action:update_status,username:{},status:{}";
 

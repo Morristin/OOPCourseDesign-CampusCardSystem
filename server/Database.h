@@ -31,8 +31,9 @@ public:
     void initialize() const;
     LoginUserStatus check_identity(const std::string& username, const std::string& password);
 
-    void add_operator(const std::string& username, const std::string& password);
+    void create_account(const std::string& username, const std::string& password, int permission);
     void del_operator(const std::string& username);
+    void register_student(const std::string& real_name, const std::string& gender, const std::string& student_id, const std::string& department);
 
     void recharge_card(const std::string& card_number, double amount, const std::string& operator_name);
     void update_account_status(const std::string& username, int new_status);

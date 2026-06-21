@@ -43,6 +43,7 @@ public:
 
 class Operator : public User {
 protected:
+    void add_student() const;
     void recharge() const;
     void manage_accounts() const;
 
@@ -50,6 +51,7 @@ public:
     Operator(const Client& client, UserInformation user_information) : User(client, std::move(user_information))
     {
         dashboard = {
+            MenuItem("Add Account", "Add normal student account.", [this] { add_student(); }),
             MenuItem("Manage Accounts", "Freeze, delete or restore accounts.", [this] { manage_accounts(); }),
             MenuItem("Recharge", "Recharge money into specific card.", [this] { recharge(); }),
         };

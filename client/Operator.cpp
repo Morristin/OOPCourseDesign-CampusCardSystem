@@ -3,6 +3,20 @@
 
 #include <iostream>
 
+void Operator::add_student() const
+{
+    std::string real_name, gender, student_id, department;
+    std::cout << "Please enter the info of student (RealName, Gender, StudentID, Department):" << std::endl;
+    std::cin >> real_name >> gender >> student_id >> department;
+
+    client.send_msg(std::format(ACTION_ADD_STUDENT, real_name, gender, student_id, department));
+
+    if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
+        std::cout << OutputType::SUCCESS << "Student registered successfully." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::USERINFO_EXISTS)
+        std::cout << OutputType::ERROR << "Student register Failed: StudentID already exists." << OutputType::RESET << std::endl;
+}
+
 void Operator::recharge() const
 {
     std::string card_number, amount_string;

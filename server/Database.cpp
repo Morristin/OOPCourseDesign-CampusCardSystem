@@ -25,7 +25,7 @@ void Database::initialize() const
     constexpr auto SQL_CREATE_TABLE_USERINFO = "CREATE TABLE IF NOT EXISTS UserInfo ("
                                                "Username TEXT PRIMARY KEY, "
                                                "RealName TEXT NOT NULL, "
-                                               "Gender INTEGER NOT NULL, "
+                                               "Gender TEXT NOT NULL, "
                                                "StudentID TEXT NOT NULL UNIQUE, "
                                                "Department TEXT NOT NULL );";
     constexpr auto SQL_CREATE_TABLE_TRANSACTIONS = "CREATE TABLE IF NOT EXISTS Transactions ("
@@ -62,7 +62,7 @@ LoginUserStatus Database::check_identity(const std::string& username, const std:
     return { username, permission, status, card_number };
 }
 
-void Database::add_operator(const std::string& username, const std::string& password)
+void Database::create_account(const std::string& username, const std::string& password, int permission)
 {
     std::lock_guard<std::mutex> lock(database_mutex);
 
@@ -71,9 +71,9 @@ void Database::add_operator(const std::string& username, const std::string& pass
 
     sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(cursor, 2, password.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_int(cursor, 3, Permission::OPERATOR);
+    sqlite3_bind_int(cursor, 3, permission);
     sqlite3_bind_int(cursor, 4, UserStatus::NORMAL);
-    sqlite3_bind_text(cursor, 5, "NULL", -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 5, CardNumber::BLANK.c_str(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(cursor) != SQLITE_DONE)
         throw DatabaseException(ErrorMsg::USER_ALREADY_EXISTS);
@@ -96,6 +96,22 @@ void Database::del_operator(const std::string& username)
         throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
 
     logger.info(std::format("Successfully deleted operator {}", username));
+}
+
+void Database::register_student(const std::string& real_name, const std::string& gender, const std::string& student_id, const std::string& department)
+{
+    sqlite3_prepare_v2(database, "INSERT INTO UserInfo (Username, RealName, Gender, StudentID, Department) VALUES (?, ?, ?, ?, ?)", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, student_id.c_str(), -1, SQLITE_STATIC); // Use StudentID as the default username.
+    sqlite3_bind_text(cursor, 2, real_name.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 3, gender.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 4, student_id.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 5, department.c_str(), -1, SQLITE_STATIC);
+
+    // If student ID already exist, throw exception.
+    if (sqlite3_step(cursor) != SQLITE_DONE)
+        throw DatabaseException(ErrorMsg::USERINFO_EXISTS);
+
+    create_account(student_id, Password::DEFAULT, Permission::STUDENT);
 }
 
 void Database::recharge_card(const std::string& card_number, double amount, const std::string& operator_name)
