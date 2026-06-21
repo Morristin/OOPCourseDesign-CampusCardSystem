@@ -54,6 +54,8 @@ static auto logger = Logger(__FILE__);
                     handle_login(stream, msg);
                 else if (action == "add_operator")
                     handle_add_operator(stream, msg);
+                else if (action == "del_operator")
+                    handle_del_operator(stream, msg);
             }
         } catch (const std::exception& err) {
             logger.warning(std::format("Client handling error: {}", err.what()));
@@ -87,6 +89,20 @@ void Server::handle_add_operator(const Stream& stream, const Parser& message)
     } catch (const DatabaseException& err) {
         if (err.what() == ErrorMsg::USER_ALREADY_EXISTS)
             logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
+        stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+    }
+}
+
+void Server::handle_del_operator(const Stream& stream, const Parser& message)
+{
+    const std::string username = message["username"];
+
+    try {
+        database.del_operator(username);
+        stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    } catch (const DatabaseException& err) {
+        if (err.what() == ErrorMsg::USER_NOT_FOUND)
+            logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
         stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
     }
 }

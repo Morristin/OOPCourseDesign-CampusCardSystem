@@ -43,5 +43,6 @@ struct LoginUserStatus {
 };
 
 constexpr auto ACTION_ADD_OPERATOR = "action:add_operator,username:{},password:{}";
+constexpr auto ACTION_DELETE_OPERATOR = "action:del_operator,username:{}";
 
 #endif

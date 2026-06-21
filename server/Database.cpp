@@ -77,3 +77,21 @@ void Database::add_operator(const std::string& username, const std::string& pass
 
     logger.info(std::format("Successfully added new operator {} with password {}", username, password));
 }
+
+void Database::del_operator(const std::string& username)
+{
+    if (constexpr auto SQL = "DELETE FROM Users WHERE Username = ? AND Permission = ?"; sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr) != SQLITE_OK)
+        logger.error(std::format("SQL Error: {}", sqlite3_errmsg(database)));
+
+    sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(cursor, 2, Permission::OPERATOR);
+
+    // This is actually a try-catch like code block.
+    // If database does not delete anything, then throw USER_NOT_FOUND error.
+    if (sqlite3_step(cursor) != SQLITE_DONE)
+        throw DatabaseException(ErrorMsg::DATABASE_FIND_USER_FAILED);
+    if (sqlite3_changes(database) == 0)
+        throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
+
+    logger.info(std::format("Successfully deleted operator {}", username));
+}

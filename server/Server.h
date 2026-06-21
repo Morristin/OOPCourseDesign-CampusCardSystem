@@ -27,6 +27,7 @@ public:
     void handle_login(const Stream& stream, const Parser& message);
 
     void handle_add_operator(const Stream& stream, const Parser& message);
+    void handle_del_operator(const Stream& stream, const Parser& message);
 };
 
 #endif

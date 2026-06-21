@@ -30,6 +30,7 @@ public:
     LoginUserStatus check_identity(const std::string& username, const std::string& password);
 
     void add_operator(const std::string& username, const std::string& password);
+    void del_operator(const std::string& username);
 };
 
 #endif
