@@ -35,7 +35,7 @@ private:
     };
 
     std::unordered_map<std::string_view, Route> routes {
-        { "login", { 0, [this](const Session& s) { handle_login(s); } } },
+        { "login", { 0, [this](Session& s) { handle_login(s); } } },
         { "add_operator", { Permission::ADMIN, [this](const Session& s) { handle_add_operator(s); } } },
         { "del_operator", { Permission::ADMIN, [this](const Session& s) { handle_del_operator(s); } } },
     };
@@ -45,7 +45,7 @@ public:
     ~Server() { close(server); }
 
     [[noreturn]] void start();
-    void handle_login(const Session& session);
+    void handle_login(Session& session);
 
     void handle_add_operator(const Session& session);
     void handle_del_operator(const Session& session);

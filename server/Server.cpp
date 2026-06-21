@@ -74,11 +74,15 @@ Server::Server()
     }
 }
 
-void Server::handle_login(const Session& session)
+void Server::handle_login(Session& session)
 {
-    const auto username = session.message["username"], password = session.message["password"];
+    const auto username = session.message["username"];
+    const auto password = session.message["password"];
+
     try {
         const auto login_user_status = database.check_identity(username, password);
+        session.permission = std::stoi(login_user_status.permission.data());
+
         session.stream.send_msg(login_user_status.message());
         logger.info(std::format("User {} successfully logged in.", username));
     } catch (const DatabaseException& err) {
@@ -90,8 +94,8 @@ void Server::handle_login(const Session& session)
 
 void Server::handle_add_operator(const Session& session)
 {
-    const std::string username = session.message["username"];
-    const std::string password = session.message["password"];
+    const auto username = session.message["username"];
+    const auto password = session.message["password"];
 
     try {
         database.add_operator(username, password);
@@ -105,7 +109,7 @@ void Server::handle_add_operator(const Session& session)
 
 void Server::handle_del_operator(const Session& session)
 {
-    const std::string username = session.message["username"];
+    const auto username = session.message["username"];
 
     try {
         database.del_operator(username);
