@@ -46,15 +46,15 @@ void Operator::add_multiple_student() const
     };
 
     // Main interact and connection.
-    std::cout << "Please paste the CSV data here. Press enter on empty line or type 'q' to finish." << std::endl;
-    std::cout << OutputType::WARNING << "Please make sure that the format of CSV data is: RealName, Gender, StudentID, Department." << OutputType::RESET << std::endl;
+    std::cout << "Please paste the CSV data here. Type a single char 'q' to end input." << std::endl;
+    std::cout << OutputType::WARNING << "Please make sure that the format of CSV data is: name, gender, id and department. Separated by comma." << OutputType::RESET << std::endl;
 
     std::string line;
     int success_count = 0;
     std::map<std::string, std::string> failed_list;
 
-    while (std::getline(std::cin, line)) {
-        if (strip(line).empty() || strip(line) == "q" || strip(line) == "Q")
+    while (std::getline(std::cin >> std::ws, line)) {
+        if (strip(line) == "q" || strip(line) == "Q")
             break;
 
         auto fields = parse_CSV_line(line);
