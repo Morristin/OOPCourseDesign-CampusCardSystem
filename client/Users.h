@@ -46,13 +46,15 @@ public:
 class Operator : public User {
 protected:
     void add_student() const;
+    void add_multiple_student() const;
     void recharge() const;
     void manage_accounts() const;
 
     [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
 
     Dashboard student_management = {
-        MenuItem("Add Account", "Add student account with student information", [this] { add_student(); })
+        MenuItem("Add Account", "Add student account with student information.", [this] { add_student(); }),
+        MenuItem("Import Accounts", "Create multiple student accounts using CSV.", [this] { add_multiple_student(); })
     };
 
     Dashboard dashboard = {

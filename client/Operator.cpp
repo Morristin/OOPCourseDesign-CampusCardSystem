@@ -2,6 +2,7 @@
 #include "Users.h"
 
 #include <iostream>
+#include <map>
 
 void Operator::add_student() const
 {
@@ -15,6 +16,66 @@ void Operator::add_student() const
         std::cout << OutputType::SUCCESS << "Student registered successfully." << OutputType::RESET << std::endl;
     else if (response["message"] == ErrorMsg::USERINFO_EXISTS)
         std::cout << OutputType::ERROR << "Student register Failed: StudentID already exists." << OutputType::RESET << std::endl;
+}
+
+void Operator::add_multiple_student() const
+{
+    // Tool functions strip() and split().
+    auto strip = [](const std::string& str) -> std::string {
+        const std::size_t first = str.find_first_not_of(" \t\r\n");
+        const std::size_t last = str.find_last_not_of(" \t\r\n");
+        return (first == std::string::npos) ? "" : str.substr(first, last - first + 1);
+    };
+
+    auto parse_CSV_line = [&strip](const std::string& line, const char ch = ',') {
+        std::vector<std::string> fields;
+
+        std::size_t start = 0;
+        std::size_t end = line.find(ch);
+
+        while (end != std::string::npos) {
+            fields.emplace_back(strip(line.substr(start, end - start)));
+            start = end + 1;
+            end = line.find(ch, start);
+        }
+
+        fields.emplace_back(strip(line.substr(start)));
+        return fields;
+    };
+
+    // Main interact and connection.
+    std::cout << "Please paste the CSV data here. Press enter on empty line or type 'q' to finish." << std::endl;
+    std::cout << OutputType::WARNING << "Please make sure that the format of CSV data is: RealName, Gender, StudentID, Department." << OutputType::RESET << std::endl;
+
+    std::string line;
+    int success_count = 0;
+    std::map<std::string, std::string> failed_list;
+
+    while (std::getline(std::cin, line)) {
+        if (strip(line).empty() || strip(line) == "q" || strip(line) == "Q")
+            break;
+
+        auto fields = parse_CSV_line(line);
+        if (fields.size() != 4) {
+            std::cout << OutputType::ERROR << std::format("The format of your line doesn't match requirement: {}", line) << OutputType::RESET << std::endl;
+            continue;
+        }
+
+        client.send_msg(std::format(ACTION_ADD_STUDENT, fields[0], fields[1], fields[2], fields[3]));
+        if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
+            success_count++;
+        else
+            failed_list[fields[2]] = response["message"];
+    }
+
+    // Output the data failed to add into database.
+    if (success_count > 0)
+        std::cout << OutputType::SUCCESS << std::format("Successfully add {} students.", success_count) << OutputType::RESET << std::endl;
+    if (!failed_list.empty()) {
+        std::cout << OutputType::ERROR << std::format("Failed add following {} students: ", failed_list.size()) << OutputType::RESET << std::endl;
+        for (const auto& [student_id, error_msg] : failed_list)
+            std::cout << std::format("StudentID: {}, Error Message: {}.", student_id, error_msg) << std::endl;
+    }
 }
 
 void Operator::recharge() const
