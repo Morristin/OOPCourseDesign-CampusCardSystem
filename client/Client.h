@@ -27,7 +27,7 @@ public:
     ~Client() { close(client); }
 
     void send_msg(const std::string& msg) const { stream.send_msg(msg); }
-    [[nodiscard]] Parser receive_msg() const { return stream.receive_msg(); }
+    [[nodiscard]] Parser receive_msg() const;
 
     void start() const;
     [[nodiscard]] Parser login() const;

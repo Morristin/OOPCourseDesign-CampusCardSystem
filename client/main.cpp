@@ -1,7 +1,10 @@
+#include "../logger/Logger.h"
 #include "Client.h"
 #include "Users.h"
 
 #include <iostream>
+
+static auto logger = Logger(__FILE__);
 
 std::unique_ptr<User> get_user(Client& client, const UserInformation& user_information)
 {
@@ -19,9 +22,12 @@ int main()
 {
     std::cout << "Welcome to Campus Card Management System." << std::endl;
 
-    auto client = Client();
-    client.start();
-
-    const auto user_information = UserInformation(client.login());
-    get_user(client, user_information)->show_dashboard();
+    try {
+        auto client = Client();
+        client.start();
+        const auto user_information = UserInformation(client.login());
+        get_user(client, user_information)->show_dashboard();
+    } catch (const std::exception& err) {
+        logger.critical(std::format("Connection Lost or System Error: {}", err.what()));
+    }
 }

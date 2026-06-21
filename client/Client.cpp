@@ -31,6 +31,18 @@ void Client::start() const
     logger.info(std::format("Client started and connected to server: {}:{}", address, port));
 }
 
+Parser Client::receive_msg() const
+{
+    const auto message = stream.receive_msg();
+
+    if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::UNKNOWN_ACTION)
+        logger.critical("Server cannot recognize the action. Please check your client version or contact operator.");
+    else if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::PERMISSION_DENIED)
+        logger.error("You do not have the permission to perform this action. Please check your client version or contact operator.");
+
+    return message;
+}
+
 Parser Client::login() const
 {
     while (true) {
