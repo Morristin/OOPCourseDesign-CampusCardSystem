@@ -42,13 +42,15 @@ class SuperOperator : public User {
 protected:
     void add_operator() const;
     void delete_operator() const;
+    void reset_operator_password() const;
 
 public:
     SuperOperator(const Client& client, UserInformation user_information) : User(client, std::move(user_information))
     {
         dashboard = {
-            MenuItem("Add Operator", "add an operator.", [this] { add_operator(); }),
-            MenuItem("Delete Operator", "delete a exist operator.", [this] { delete_operator(); }),
+            MenuItem("Add Operator", "Add an operator.", [this] { add_operator(); }),
+            MenuItem("Delete Operator", "Delete a exist operator.", [this] { delete_operator(); }),
+            MenuItem("Reset Operator Password", "Reset a exist operator's password.", [this] { delete_operator(); }),
         };
     };
 };
