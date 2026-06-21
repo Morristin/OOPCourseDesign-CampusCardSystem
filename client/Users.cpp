@@ -5,9 +5,9 @@
 void User::show_dashboard() const
 {
     auto current_dashboard = main_dashboard();
-    std::cout << OutputType::THEME << "Enter the number index before commands to execute them. Enter 'h' for help." << OutputType::RESET << std::endl;
 
     while (true) {
+        std::cout << OutputType::THEME << "Enter the number index before commands to execute them. Enter 'h' for help." << OutputType::RESET << std::endl;
         for (int index = 1; index <= current_dashboard.length(); index++)
             std::cout << index << ". " << current_dashboard[index].name << ": " << current_dashboard[index].description << std::endl;
 

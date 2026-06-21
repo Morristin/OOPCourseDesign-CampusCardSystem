@@ -135,6 +135,33 @@ void Server::handle_add_student(const Session& session)
     }
 }
 
+void Server::handle_del_student(const Session& session)
+{
+    const std::string student_id = session.message["student_id"];
+
+    try {
+        database.delete_student(student_id);
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    } catch (const DatabaseException& err) {
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+    }
+}
+
+void Server::handle_update_student(const Session& session)
+{
+    const std::string student_id = session.message["student_id"];
+    const std::string real_name = session.message["real_name"];
+    const std::string gender = session.message["gender"];
+    const std::string department = session.message["department"];
+
+    try {
+        database.update_student(student_id, real_name, gender, department);
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    } catch (const DatabaseException& err) {
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+    }
+}
+
 void Server::handle_recharge(const Session& session)
 {
     const std::string card_number = session.message["card_number"];

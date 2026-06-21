@@ -111,7 +111,54 @@ void Database::register_student(const std::string& real_name, const std::string&
     if (sqlite3_step(cursor) != SQLITE_DONE)
         throw DatabaseException(ErrorMsg::USERINFO_EXISTS);
 
-    create_account(student_id, Password::DEFAULT, Permission::STUDENT);
+    try {
+        create_account(student_id, Password::DEFAULT, Permission::STUDENT);
+    } catch (const DatabaseException&) {
+        // If create_account failed，rollback to previous UserInfo table.
+        sqlite3_prepare_v2(database, "DELETE FROM UserInfo WHERE Username = ?", -1, &cursor, nullptr);
+        sqlite3_bind_text(cursor, 1, student_id.c_str(), -1, SQLITE_STATIC);
+        sqlite3_step(cursor);
+        throw;
+    }
+}
+
+void Database::delete_student(const std::string& student_id)
+{
+    sqlite3_prepare_v2(database, "SELECT Username FROM UserInfo WHERE Username = ?", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, student_id.c_str(), -1, SQLITE_STATIC);
+    if (sqlite3_step(cursor) != SQLITE_ROW)
+        throw DatabaseException(ErrorMsg::USERINFO_NOT_FOUND);
+
+    // Only set the user in User table to DELETED status, so the data can be recovered easily.
+    const auto username = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+    update_account_status(username, UserStatus::DELETED);
+
+    sqlite3_prepare_v2(database, "DELETE FROM UserInfo WHERE Username = ?", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, student_id.c_str(), -1, SQLITE_STATIC);
+    sqlite3_step(cursor);
+}
+
+void Database::update_student(const std::string& student_id, const std::string& real_name, const std::string& gender, const std::string& department)
+{
+    sqlite3_prepare_v2(database, "SELECT Username FROM UserInfo WHERE Username = ?", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, student_id.c_str(), -1, SQLITE_STATIC);
+    if (sqlite3_step(cursor) != SQLITE_ROW)
+        throw DatabaseException(ErrorMsg::USERINFO_NOT_FOUND);
+
+    // Use COALESCE and NULLIF to only update specific parts of UserInfo.
+    constexpr auto SQL = "UPDATE UserInfo SET "
+                         "RealName = COALESCE(NULLIF(?, ''), RealName), "
+                         "Gender = COALESCE(NULLIF(?, ''), Gender), "
+                         "Department = COALESCE(NULLIF(?, ''), Department) "
+                         "WHERE Username = ?";
+
+    sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, real_name.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 2, gender.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 3, department.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 4, student_id.c_str(), -1, SQLITE_STATIC);
+
+    sqlite3_step(cursor);
 }
 
 void Database::recharge_card(const std::string& card_number, double amount, const std::string& operator_name)
@@ -135,7 +182,7 @@ void Database::recharge_card(const std::string& card_number, double amount, cons
         old_balance = sqlite3_column_double(cursor, 0);
 
     // Calculate new balance and insert recharge record into Transactions.
-    double new_balance = old_balance + amount;
+    const double new_balance = old_balance + amount;
     constexpr auto SQL_INSERT = "INSERT INTO Transactions (CardNumber, Amount, Balance, TransactionTime, Operator) "
                                 "VALUES (?, ?, ?, datetime('now', 'localtime'), ?)";
     sqlite3_prepare_v2(database, SQL_INSERT, -1, &cursor, nullptr);

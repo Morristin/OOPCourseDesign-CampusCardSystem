@@ -16,6 +16,8 @@ void Operator::add_student() const
         std::cout << OutputType::SUCCESS << "Student registered successfully." << OutputType::RESET << std::endl;
     else if (response["message"] == ErrorMsg::USERINFO_EXISTS)
         std::cout << OutputType::ERROR << "Student register Failed: StudentID already exists." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::USER_ALREADY_EXISTS)
+        std::cout << OutputType::ERROR << "Student register Failed: A user with StudentID as username already exists." << OutputType::RESET << std::endl;
 }
 
 void Operator::add_multiple_student() const
@@ -76,6 +78,38 @@ void Operator::add_multiple_student() const
         for (const auto& [student_id, error_msg] : failed_list)
             std::cout << std::format("StudentID: {}, Error Message: {}.", student_id, error_msg) << std::endl;
     }
+}
+
+void Operator::del_student() const
+{
+    std::string student_id;
+    std::cout << "Enter the StudentID to delete: " << std::endl;
+    std::cin >> student_id;
+
+    client.send_msg(std::format(ACTION_DEL_STUDENT, student_id));
+
+    if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
+        std::cout << OutputType::SUCCESS << "Student deleted successfully." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::USERINFO_NOT_FOUND)
+        std::cout << OutputType::ERROR << "Failed to delete student. StudentID does not exist." << OutputType::RESET << std::endl;
+}
+
+void Operator::update_student() const
+{
+    std::string student_id, real_name, gender, department;
+    std::cout << "Please enter the ID of student who you want to update: " << std::endl;
+    std::cin >> student_id;
+
+    std::cout << "Please enter the new RealName, Gender or Gender (enter '0' to keep previous info): " << std::endl;
+    std::cin >> real_name >> gender >> department;
+
+    auto format = [](const std::string& content) -> std::string { return (content == "0") ? "" : content; };
+    client.send_msg(std::format(ACTION_UPDATE_STUDENT, student_id, format(real_name), format(gender), format(department)));
+
+    if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
+        std::cout << OutputType::SUCCESS << "Student updated successfully." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::USERINFO_NOT_FOUND)
+        std::cout << OutputType::ERROR << "Failed to modify student. StudentID does not exist." << OutputType::RESET << std::endl;
 }
 
 void Operator::recharge() const

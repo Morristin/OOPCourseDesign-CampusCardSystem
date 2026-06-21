@@ -15,13 +15,14 @@ constexpr std::string_view PERMISSION_DENIED = "PermissionDenied";
 
 constexpr std::string_view USER_NOT_FOUND = "UserNotFound";
 constexpr std::string_view USER_ALREADY_EXISTS = "UserAlreadyExists";
-constexpr std::string_view TARGET_NOT_STUDENT = "TargetNotStudent";
+constexpr std::string_view USERINFO_NOT_FOUND = "UserInfoNotFound";
 constexpr std::string_view USERINFO_EXISTS = "UserInfoAlreadyExists";
 constexpr std::string_view CARD_NOT_FOUND = "CardNotFound";
-constexpr std::string_view ACCOUNT_ABNORMAL = "AccountAbnormal";
 
-constexpr std::string_view PASSWORD_WRONG = "PasswordWrong";
+constexpr std::string_view ACCOUNT_ABNORMAL = "AccountAbnormal";
 constexpr std::string_view BALANCE_INSUFFICIENT = "BalanceInsufficient";
+constexpr std::string_view PASSWORD_WRONG = "PasswordWrong";
+constexpr std::string_view TARGET_NOT_STUDENT = "TargetNotStudent";
 }
 
 namespace Password {
@@ -61,6 +62,9 @@ constexpr auto ACTION_ADD_OPERATOR = "action:add_operator,username:{},password:{
 constexpr auto ACTION_DELETE_OPERATOR = "action:del_operator,username:{}";
 
 constexpr auto ACTION_ADD_STUDENT = "action:add_student,real_name:{},gender:{},student_id:{},department:{}";
+constexpr auto ACTION_DEL_STUDENT = "action:del_student,student_id:{}";
+constexpr auto ACTION_UPDATE_STUDENT = "action:update_student,student_id:{},real_name:{},gender:{},department:{}";
+
 constexpr auto ACTION_RECHARGE = "action:recharge,card_number:{},amount:{}";
 constexpr auto ACTION_UPDATE_STATUS = "action:update_status,username:{},status:{}";
 
