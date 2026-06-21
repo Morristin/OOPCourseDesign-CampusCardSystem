@@ -51,6 +51,7 @@ constexpr auto ACTION_ADD_OPERATOR = "action:add_operator,username:{},password:{
 constexpr auto ACTION_DELETE_OPERATOR = "action:del_operator,username:{}";
 
 constexpr auto ACTION_RECHARGE = "action:recharge,card_number:{},amount:{}";
+constexpr auto ACTION_UPDATE_STATUS = "action:update_status,username:{},status:{}";
 
 constexpr auto ACTION_CONSUME = "action:consume,card_number:{},amount:{},merchant:{}";
 

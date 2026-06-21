@@ -133,6 +133,19 @@ void Server::handle_recharge(const Session& session)
     }
 }
 
+void Server::handle_update_status(const Session& session)
+{
+    const std::string username = session.message["username"];
+    const int new_status = std::stoi(session.message["status"]);
+
+    try {
+        database.update_account_status(username, new_status);
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    } catch (const DatabaseException& err) {
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+    }
+}
+
 void Server::handle_consume(const Session& session)
 {
     const std::string card_number = session.message["card_number"];

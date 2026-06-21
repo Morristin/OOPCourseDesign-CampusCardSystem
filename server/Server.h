@@ -54,6 +54,7 @@ public:
     void handle_del_operator(const Session& session);
 
     void handle_recharge(const Session& session);
+    void handle_update_status(const Session& session);
 
     void handle_consume(const Session& session);
 };

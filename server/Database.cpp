@@ -131,6 +131,21 @@ void Database::recharge_card(const std::string& card_number, double amount, cons
     sqlite3_step(cursor);
 }
 
+void Database::update_account_status(const std::string& username, const int new_status)
+{
+    // Check whether the username exist.
+    sqlite3_prepare_v2(database, "SELECT Username FROM Users WHERE Username = ?", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
+    if (sqlite3_step(cursor) != SQLITE_ROW)
+        throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
+
+    // Update the status of the specific user.
+    sqlite3_prepare_v2(database, "UPDATE Users SET Status = ? WHERE Username = ?", -1, &cursor, nullptr);
+    sqlite3_bind_int(cursor, 1, new_status);
+    sqlite3_bind_text(cursor, 2, username.c_str(), -1, SQLITE_STATIC);
+    sqlite3_step(cursor);
+}
+
 void Database::consume_card(const std::string& card_number, const double amount, const std::string& merchant)
 {
     // Check whether the card number exist and account is in normal status.
