@@ -1,8 +1,8 @@
 #include "Logger.h"
 
-#include <iostream>
+#include "../client/Client.h"
 
-constexpr int LOG_OPEN_FAILED = 1;
+#include <iostream>
 
 // Initialize static class member std::mutex.
 std::mutex Logger::log_mutex;
@@ -13,17 +13,23 @@ Logger::Logger(const std::string& file_name)
     module_name = short_file_name.substr(0, short_file_name.rfind('.'));
 
     if (log_file.open(log_name, std::ios::app); !log_file.is_open()) {
-        std::cerr << "Error open log file: " << log_name << std::endl;
-        exit(LOG_OPEN_FAILED);
+        std::cout << OutputType::CRITICAL << std::format("Error open log file: {}. Please check CMake settings and your permission.", log_name) << OutputType::RESET << std::endl;
+        exit(1);
     }
 }
 
-void Logger::write(const std::string& level, const std::string& msg)
+void Logger::write(const std::string& level, const std::string& message)
 {
-    const auto tt = time(nullptr);
-
     std::lock_guard lock(log_mutex);
+
+    const auto tt = time(nullptr);
     log_file << std::put_time(std::localtime(&tt), date_format);
-    log_file << std::format(log_format, level, module_name, msg);
-    log_file << std::flush;
+    log_file << std::format(log_format, level, module_name, message) << std::flush;
+
+    if (level == "WARNING" && DEBUG_MODE)
+        std::cout << OutputType::WARNING << message << OutputType::RESET << std::endl;
+    else if (level == "ERROR" && DEBUG_MODE)
+        std::cout << OutputType::ERROR << message << OutputType::RESET << std::endl;
+    else if (level == "CRITICAL" && DEBUG_MODE)
+        std::cout << OutputType::CRITICAL <<"Serious error happens: " << message << OutputType::RESET << std::endl;
 }

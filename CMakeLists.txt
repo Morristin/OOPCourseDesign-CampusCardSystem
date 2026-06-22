@@ -1,13 +1,18 @@
-# CMake Version Requirement & Project Settings
 cmake_minimum_required(VERSION 4.2)
 project(CurriculumDesign)
 
 set(CMAKE_CXX_STANDARD 20)
 
 
-# Server compile options & SQLite3 library auto detect.
 add_executable(Server)
+add_executable(Client)
+
+target_compile_definitions(Server PRIVATE DEBUG_MODE=0)
+target_compile_definitions(Client PRIVATE DEBUG_MODE=0)
+
 target_compile_definitions(Server PRIVATE LOG_FILE="server.log")
+target_compile_definitions(Client PRIVATE LOG_FILE="client.log")
+
 
 message(CHECK_START "Looking for local SQLite3 library.")
 find_package(SQLite3 QUIET)
@@ -18,6 +23,7 @@ else ()
     message(CHECK_FAIL "Failed to find local SQLite3 library. Use amalgamation version in the repo instead.")
     target_sources(Server PRIVATE .third_party/sqlite3/sqlite3.c)
 endif ()
+
 
 target_sources(Server
         PRIVATE
@@ -31,18 +37,12 @@ target_sources(Server
         server/main.cpp
 )
 
-
-# Client compile options
-add_executable(Client)
-target_compile_definitions(Client PRIVATE LOG_FILE="client.log")
-
 target_sources(Client
         PRIVATE
         logger/Logger.cpp
         stream/Stream.cpp
         stream/Parser.cpp
         stream/protocol.h
-        # Users: SuperOP, OP and Student.
         client/Users.cpp
         client/SuperOperator.cpp
         client/Operator.cpp
