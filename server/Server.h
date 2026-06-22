@@ -50,7 +50,9 @@ private:
         { "update_student", { Permission::OPERATOR, [this](const Session& s) { handle_update_student(s); } } },
 
         { "recharge", { Permission::OPERATOR, [this](const Session& s) { handle_recharge(s); } } },
-        { "consume", { Permission::STUDENT, [this](const Session& s) { handle_consume(s); } } }
+        { "consume", { Permission::STUDENT, [this](const Session& s) { handle_consume(s); } } },
+
+        { "query_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_query_transactions(s); } } }
     };
 
 public:
@@ -71,6 +73,7 @@ public:
     void handle_update_status(const Session& session);
 
     void handle_consume(const Session& session);
+    void handle_query_transactions(const Session& session);
 };
 
 #endif

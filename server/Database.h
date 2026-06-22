@@ -42,6 +42,7 @@ public:
     void update_account_status(const std::string& username, int new_status);
 
     void consume_card(const std::string& card_number, double amount, const std::string& merchant);
+    std::vector<std::string> query_transactions(const std::string& card_number);
 };
 
 #endif

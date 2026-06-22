@@ -34,7 +34,7 @@ void Database::initialize() const
                                                    "Amount REAL NOT NULL, "
                                                    "Balance REAL NOT NULL, "
                                                    "TransactionTime TEXT NOT NULL,"
-                                                   "Operator TEXT );";
+                                                   "Operator TEXT NOT NULL );";
 
     sqlite3_exec(database, SQL_CREATE_TABLE_USERS, nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_USERINFO, nullptr, nullptr, nullptr);
@@ -242,4 +242,21 @@ void Database::consume_card(const std::string& card_number, const double amount,
     sqlite3_bind_text(cursor, 4, merchant.c_str(), -1, SQLITE_STATIC);
 
     sqlite3_step(cursor);
+}
+
+std::vector<std::string> Database::query_transactions(const std::string& card_number)
+{
+    sqlite3_prepare_v2(database, "SELECT TransactionTime, Amount, Balance, Operator FROM Transactions WHERE CardNumber = ? ORDER BY ID DESC", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
+
+    std::vector<std::string> records;
+    while (sqlite3_step(cursor) == SQLITE_ROW) {
+        auto time = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        auto amount = sqlite3_column_double(cursor, 1);
+        auto balance = sqlite3_column_double(cursor, 2);
+        auto op = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
+        records.emplace_back(std::format(TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), op));
+    }
+
+    return records;
 }

@@ -48,6 +48,9 @@ constexpr std::string BLANK = "NULL";
 
 constexpr auto STATUS_WITH_MSG = "status:{},message:{}";
 
+constexpr auto LONG_MSG_START = "status:{},message:START,length:{}";
+constexpr auto LONG_MSG_END = "status:{},message:END,length:{}";
+
 constexpr auto ACTION_LOGIN = "action:login,username:{},password:{}";
 constexpr auto LOGIN_USER_STATUS = "status:{},username:{},permission:{},user_status:{},card_number:{}";
 struct LoginUserStatus {
@@ -69,5 +72,9 @@ constexpr auto ACTION_RECHARGE = "action:recharge,card_number:{},amount:{}";
 constexpr auto ACTION_UPDATE_STATUS = "action:update_status,username:{},status:{}";
 
 constexpr auto ACTION_CONSUME = "action:consume,card_number:{},amount:{},merchant:{}";
+
+constexpr auto ACTION_QUERY_TRANSACTION = "action:query_transaction,card_number:{}";
+
+constexpr auto TRANSACTION_RECORD = "time:{},amount:{},balance:{},operator:{}";
 
 #endif

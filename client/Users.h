@@ -52,6 +52,7 @@ protected:
 
     void recharge() const;
     void manage_accounts() const;
+    void query_transactions() const;
 
     [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
 
@@ -66,6 +67,7 @@ protected:
         MenuItem("Manage Student Information", "Add, modify and delete student account.", &student_management),
         MenuItem("Manage Student Accounts", "Freeze, delete or restore accounts.", [this] { manage_accounts(); }),
         MenuItem("Recharge", "Recharge money into specific card.", [this] { recharge(); }),
+        MenuItem("Query Transactions", "Query the transaction history of a card.", [this] { query_transactions(); })
     };
 
 public:
