@@ -10,6 +10,8 @@ constexpr std::string_view FAILED = "failed";
 }
 
 namespace ErrorMsg {
+constexpr std::string_view NETWORK_ERROR = "NetworkError";
+
 constexpr std::string_view UNKNOWN_ACTION = "UnknownAction";
 constexpr std::string_view PERMISSION_DENIED = "PermissionDenied";
 
