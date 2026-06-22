@@ -13,7 +13,7 @@ void Student::consume() const
 
     try {
         double amount = std::stod(amount_string);
-        client.send_msg(std::format(ACTION_CONSUME, user_information.card_number, std::format("{:.2f}", amount), merchant));
+        client.send_msg(std::format(Action::CONSUME, user_information.card_number, std::format("{:.2f}", amount), merchant));
     } catch (const std::exception&) {
         std::cout << "Invalid amount format. You should enter a valid float." << std::endl;
         return;

@@ -46,17 +46,17 @@ private:
     std::unordered_map<std::string_view, Route> routes {
         { "login", { 0, [this](Session& s) { handle_login(s); } } },
 
-        { "add_operator", { Permission::SUPEROPERATOR, [this](const Session& s) { handle_add_operator(s); } } },
-        { "del_operator", { Permission::SUPEROPERATOR, [this](const Session& s) { handle_del_operator(s); } } },
+        { "create_operator", { Permission::SUPEROPERATOR, [this](const Session& s) { handle_create_operator(s); } } },
+        { "delete_operator", { Permission::SUPEROPERATOR, [this](const Session& s) { handle_delete_operator(s); } } },
 
-        { "add_student", { Permission::OPERATOR, [this](const Session& s) { handle_add_student(s); } } },
-        { "del_student", { Permission::OPERATOR, [this](const Session& s) { handle_del_student(s); } } },
-        { "update_student", { Permission::OPERATOR, [this](const Session& s) { handle_update_student(s); } } },
+        { "create_student", { Permission::OPERATOR, [this](const Session& s) { handle_create_student(s); } } },
+        { "delete_student", { Permission::OPERATOR, [this](const Session& s) { handle_delete_student(s); } } },
+        { "update_student_status", { Permission::OPERATOR, [this](const Session& s) { handle_update_student_status(s); } } },
+        { "update_student_userinfo", { Permission::OPERATOR, [this](const Session& s) { handle_update_student_userinfo(s); } } },
 
         { "recharge", { Permission::OPERATOR, [this](const Session& s) { handle_recharge(s); } } },
         { "consume", { Permission::STUDENT, [this](const Session& s) { handle_consume(s); } } },
-
-        { "query_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_query_transactions(s); } } }
+        { "query_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_query_transactions(s); } } },
     };
 
 public:
@@ -66,16 +66,15 @@ public:
     [[noreturn]] void start();
     void handle_login(Session& session);
 
-    void handle_add_operator(const Session& session);
-    void handle_del_operator(const Session& session);
+    void handle_create_operator(const Session& session);
+    void handle_delete_operator(const Session& session);
 
-    void handle_add_student(const Session& session);
-    void handle_del_student(const Session& session);
-    void handle_update_student(const Session& session);
+    void handle_create_student(const Session& session);
+    void handle_delete_student(const Session& session);
+    void handle_update_student_status(const Session& session);
+    void handle_update_student_userinfo(const Session& session);
 
     void handle_recharge(const Session& session);
-    void handle_update_status(const Session& session);
-
     void handle_consume(const Session& session);
     void handle_query_transactions(const Session& session);
 };

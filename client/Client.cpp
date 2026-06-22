@@ -4,6 +4,7 @@
 #include "../protocol/protocol.h"
 
 #include <arpa/inet.h>
+#include <iostream>
 
 static constexpr auto CONNECT_FAILED = 32;
 static auto logger = Logger(__FILE__);
@@ -55,7 +56,7 @@ Parser Client::login() const
             continue;
         }
 
-        send_msg(std::format(ACTION_LOGIN, username, password));
+        send_msg(std::format(Action::LOGIN, username, password));
         const auto message = receive_msg();
 
         if (message["status"] == MsgStatus::SUCCESS && std::stoi(message["user_status"]) == UserStatus::NORMAL) {

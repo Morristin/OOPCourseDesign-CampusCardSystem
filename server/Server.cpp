@@ -1,14 +1,14 @@
 #include "Server.h"
 
 #include "../logger/Logger.h"
+#include "../protocol/colors.h"
 #include "../protocol/protocol.h"
 #include "Database.h"
 
+#include <iostream>
 #include <netinet/in.h>
 #include <thread>
 
-static constexpr auto BIND_ADDRESS_FAILED = 21;
-static constexpr auto LISTEN_FAILED = 22;
 static auto logger = Logger(__FILE__);
 
 /**
@@ -42,19 +42,13 @@ Server::Server()
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(DEFAULT_PORT);
 
-    if (const auto status = bind(server, reinterpret_cast<struct sockaddr*>(&server_addr), sizeof(server_addr));
-        status < 0) {
+    if (const auto status = bind(server, reinterpret_cast<struct sockaddr*>(&server_addr), sizeof(server_addr)); status < 0)
         logger.critical("Can not bind address to server.");
-        exit(BIND_ADDRESS_FAILED);
-    }
-
-    if (const auto status = listen(server, BACKLOG); status < 0) {
+    if (const auto status = listen(server, BACKLOG); status < 0)
         logger.critical("Can not start listen.");
-        exit(LISTEN_FAILED);
-    }
 
     logger.info("Server started.");
-    std::cout << "Server is started. Listen on port " << server_addr.sin_port << "." << std::endl;
+    std::cout << OutputType::SUCCESS << std::format("Server is started. Listen on port {}.", server_addr.sin_port) << OutputType::RESET << std::endl;
 }
 
 [[noreturn]] void Server::start()
@@ -97,57 +91,70 @@ Server::Server()
 
 void Server::handle_login(Session& session)
 {
-    const auto username = session.message["username"];
-    const auto password = session.message["password"];
+    const std::string username = session.message["username"];
+    const Parser user_info(database.query_account(username));
 
-    try {
-        const auto login_user_status = database.check_identity(username, password);
-        session.username = login_user_status.username;
-        session.permission = std::stoi(login_user_status.permission.data());
+    // Check whether the password match and account status is normal.
+    if (const std::string input_password = session.message["password"]; user_info["password"] != input_password)
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::PASSWORD_WRONG));
 
-        session.stream.send_msg(login_user_status.message());
-        session.logger.info(std::format("User {} successfully logged in.", username));
-    } catch (const DatabaseException& err) {
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
-    }
+    if (const int status = std::stoi(std::string(user_info["status"])); status == UserStatus::FROZEN)
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::ACCOUNT_FROZEN));
+    else if (status == UserStatus::DELETED)
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::ACCOUNT_DELETED));
+
+    // Update the username and permission in the session.
+    session.username = username;
+    session.permission = std::stoi(std::string(user_info["permission"]));
+
+    // Generate and send message to client.
+    session.stream.send_msg(std::format(LOGIN_RESULT, MsgStatus::SUCCESS, username, user_info["permission"], user_info["status"], user_info["card_number"]));
 }
 
-void Server::handle_add_operator(const Session& session)
+void Server::handle_create_operator(const Session& session)
 {
     const auto username = session.message["username"];
     const auto password = session.message["password"];
     const auto err = execute_and_response(session, [&] { database.create_account(username, password, Permission::OPERATOR); });
 
-    if (err == ErrorMsg::USER_ALREADY_EXISTS)
+    if (err == ErrorMsg::USER_EXISTS)
         session.logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
 }
 
-void Server::handle_del_operator(const Session& session)
+void Server::handle_delete_operator(const Session& session)
 {
     const auto username = session.message["username"];
-    const auto err = execute_and_response(session, [&] { database.del_operator(username); });
+    const auto err = execute_and_response(session, [&] { database.delete_operator(username); });
 
     if (err == ErrorMsg::USER_NOT_FOUND)
         session.logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
 }
 
-void Server::handle_add_student(const Session& session)
+void Server::handle_create_student(const Session& session)
 {
     const std::string real_name = session.message["real_name"];
     const std::string gender = session.message["gender"];
     const std::string student_id = session.message["student_id"];
     const std::string department = session.message["department"];
 
-    const auto err = execute_and_response(session, [&] { database.register_student(real_name, gender, student_id, department); });
+    const auto err = execute_and_response(session, [&] { database.create_student(real_name, gender, student_id, department); });
 }
 
-void Server::handle_del_student(const Session& session)
+void Server::handle_delete_student(const Session& session)
 {
     const std::string student_id = session.message["student_id"];
     const auto err = execute_and_response(session, [&] { database.delete_student(student_id); });
 }
 
-void Server::handle_update_student(const Session& session)
+void Server::handle_update_student_status(const Session& session)
+{
+    const std::string username = session.message["username"];
+    const int new_status = std::stoi(session.message["status"]);
+
+    const auto err = execute_and_response(session, [&] { database.update_account_status(username, new_status); });
+}
+
+void Server::handle_update_student_userinfo(const Session& session)
 {
     const std::string student_id = session.message["student_id"];
     const std::string real_name = session.message["real_name"];
@@ -163,14 +170,6 @@ void Server::handle_recharge(const Session& session)
     const double amount = std::stod(session.message["amount"]);
 
     const auto err = execute_and_response(session, [&] { database.recharge_card(card_number, amount, session.username); });
-}
-
-void Server::handle_update_status(const Session& session)
-{
-    const std::string username = session.message["username"];
-    const int new_status = std::stoi(session.message["status"]);
-
-    const auto err = execute_and_response(session, [&] { database.update_account_status(username, new_status); });
 }
 
 void Server::handle_consume(const Session& session)

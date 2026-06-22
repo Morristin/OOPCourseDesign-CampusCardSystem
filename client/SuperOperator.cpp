@@ -1,24 +1,25 @@
+#include "Users.h"
+
 #include "../logger/Logger.h"
 #include "../protocol/colors.h"
 #include "../protocol/protocol.h"
-#include "Users.h"
 
 #include <iostream>
 
 static auto logger = Logger(__FILE__);
 
-void SuperOperator::add_operator() const
+void SuperOperator::create_operator() const
 {
     std::string username, password;
     std::cout << "Please enter new operator's username and password: " << std::endl;
     std::cin >> username >> password;
 
-    client.send_msg(std::format(ACTION_ADD_OPERATOR, username, password));
+    client.send_msg(std::format(Action::CREATE_OPERATOR, username, password));
     const auto response = client.receive_msg();
 
     if (response["status"] == MsgStatus::SUCCESS)
         std::cout << OutputType::SUCCESS << "Operator added successfully." << OutputType::RESET << std::endl;
-    else if (response["message"] == ErrorMsg::USER_ALREADY_EXISTS)
+    else if (response["message"] == ErrorMsg::USER_EXISTS)
         std::cout << OutputType::WARNING << "Failed to add operator as username already exist. Please change one and try again." << OutputType::RESET << std::endl;
 }
 
@@ -28,7 +29,7 @@ void SuperOperator::delete_operator() const
     std::cout << "Please enter the username of the operator to delete: " << std::endl;
     std::cin >> username;
 
-    client.send_msg(std::format(ACTION_DELETE_OPERATOR, username));
+    client.send_msg(std::format(Action::DELETE_OPERATOR, username));
     const auto response = client.receive_msg();
 
     if (response["status"] == MsgStatus::SUCCESS)
@@ -43,13 +44,13 @@ void SuperOperator::reset_operator_password() const
     std::cout << "Enter the operator's username and new password: " << std::endl;
     std::cin >> username >> new_password;
 
-    client.send_msg(std::format(ACTION_DELETE_OPERATOR, username));
+    client.send_msg(std::format(Action::DELETE_OPERATOR, username));
     if (const auto response = client.receive_msg(); response["status"] == MsgStatus::FAILED) {
         std::cout << OutputType::ERROR << "Reset password failed. The operator you entered does not exist." << OutputType::RESET << std::endl;
         return;
     }
 
-    client.send_msg(std::format(ACTION_ADD_OPERATOR, username, new_password));
+    client.send_msg(std::format(Action::CREATE_OPERATOR, username, new_password));
     if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
         std::cout << OutputType::SUCCESS << "Password reset successfully." << OutputType::RESET << std::endl;
 

@@ -41,7 +41,7 @@ void Database::initialize() const
     sqlite3_exec(database, SQL_CREATE_TABLE_TRANSACTIONS, nullptr, nullptr, nullptr);
 }
 
-LoginUserStatus Database::check_identity(const std::string& username, const std::string& password)
+std::string Database::query_account(const std::string& username)
 {
     std::lock_guard lock(database_mutex);
 
@@ -52,14 +52,12 @@ LoginUserStatus Database::check_identity(const std::string& username, const std:
     if (sqlite3_step(cursor) != SQLITE_ROW)
         throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
 
-    if (const auto stored_password = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
-        password != stored_password)
-        throw DatabaseException(ErrorMsg::PASSWORD_WRONG);
+    std::string password = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+    std::string permission = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
+    std::string status = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 2));
+    std::string card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
 
-    const auto permission = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
-    const auto status = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 2));
-    const auto card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
-    return { username, permission, status, card_number };
+    return std::format(DB_USER_INFO, password, permission, status, card_number);
 }
 
 void Database::create_account(const std::string& username, const std::string& password, int permission)
@@ -76,12 +74,32 @@ void Database::create_account(const std::string& username, const std::string& pa
     sqlite3_bind_text(cursor, 5, CardNumber::BLANK.c_str(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(cursor) != SQLITE_DONE)
-        throw DatabaseException(ErrorMsg::USER_ALREADY_EXISTS);
+        throw DatabaseException(ErrorMsg::USER_EXISTS);
 
     logger.info(std::format("Successfully added new operator {} with password {}", username, password));
 }
 
-void Database::del_operator(const std::string& username)
+void Database::update_account_status(const std::string& username, const int new_status)
+{
+    std::lock_guard lock(database_mutex);
+
+    // Check whether the username exist, and whether the user is student.
+    sqlite3_prepare_v2(database, "SELECT Permission FROM Users WHERE Username = ?", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
+
+    if (sqlite3_step(cursor) != SQLITE_ROW)
+        throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
+    if (const int target_permission = sqlite3_column_int(cursor, 0); target_permission != Permission::STUDENT)
+        throw DatabaseException(ErrorMsg::TARGET_NOT_STUDENT);
+
+    // Update the status of the specific user.
+    sqlite3_prepare_v2(database, "UPDATE Users SET Status = ? WHERE Username = ?", -1, &cursor, nullptr);
+    sqlite3_bind_int(cursor, 1, new_status);
+    sqlite3_bind_text(cursor, 2, username.c_str(), -1, SQLITE_STATIC);
+    sqlite3_step(cursor);
+}
+
+void Database::delete_operator(const std::string& username)
 {
     std::lock_guard lock(database_mutex);
 
@@ -98,8 +116,10 @@ void Database::del_operator(const std::string& username)
     logger.info(std::format("Successfully deleted operator {}", username));
 }
 
-void Database::register_student(const std::string& real_name, const std::string& gender, const std::string& student_id, const std::string& department)
+void Database::create_student(const std::string& real_name, const std::string& gender, const std::string& student_id, const std::string& department)
 {
+    std::lock_guard lock(database_mutex);
+
     sqlite3_prepare_v2(database, "INSERT INTO UserInfo (Username, RealName, Gender, StudentID, Department) VALUES (?, ?, ?, ?, ?)", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, student_id.c_str(), -1, SQLITE_STATIC); // Use StudentID as the default username.
     sqlite3_bind_text(cursor, 2, real_name.c_str(), -1, SQLITE_STATIC);
@@ -124,6 +144,8 @@ void Database::register_student(const std::string& real_name, const std::string&
 
 void Database::delete_student(const std::string& student_id)
 {
+    std::lock_guard lock(database_mutex);
+
     sqlite3_prepare_v2(database, "SELECT Username FROM UserInfo WHERE Username = ?", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, student_id.c_str(), -1, SQLITE_STATIC);
     if (sqlite3_step(cursor) != SQLITE_ROW)
@@ -140,6 +162,8 @@ void Database::delete_student(const std::string& student_id)
 
 void Database::update_student(const std::string& student_id, const std::string& real_name, const std::string& gender, const std::string& department)
 {
+    std::lock_guard lock(database_mutex);
+
     sqlite3_prepare_v2(database, "SELECT Username FROM UserInfo WHERE Username = ?", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, student_id.c_str(), -1, SQLITE_STATIC);
     if (sqlite3_step(cursor) != SQLITE_ROW)
@@ -163,6 +187,8 @@ void Database::update_student(const std::string& student_id, const std::string& 
 
 void Database::recharge_card(const std::string& card_number, double amount, const std::string& operator_name)
 {
+    std::lock_guard lock(database_mutex);
+
     // Check whether the card number exist and account is in normal status.
     sqlite3_prepare_v2(database, "SELECT Status FROM Users WHERE CardNumber = ?", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
@@ -194,26 +220,10 @@ void Database::recharge_card(const std::string& card_number, double amount, cons
     sqlite3_step(cursor);
 }
 
-void Database::update_account_status(const std::string& username, const int new_status)
-{
-    // Check whether the username exist, and whether the user is student.
-    sqlite3_prepare_v2(database, "SELECT Permission FROM Users WHERE Username = ?", -1, &cursor, nullptr);
-    sqlite3_bind_text(cursor, 1, username.c_str(), -1, SQLITE_STATIC);
-
-    if (sqlite3_step(cursor) != SQLITE_ROW)
-        throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
-    if (const int target_permission = sqlite3_column_int(cursor, 0); target_permission != Permission::STUDENT)
-        throw DatabaseException(ErrorMsg::TARGET_NOT_STUDENT);
-
-    // Update the status of the specific user.
-    sqlite3_prepare_v2(database, "UPDATE Users SET Status = ? WHERE Username = ?", -1, &cursor, nullptr);
-    sqlite3_bind_int(cursor, 1, new_status);
-    sqlite3_bind_text(cursor, 2, username.c_str(), -1, SQLITE_STATIC);
-    sqlite3_step(cursor);
-}
-
 void Database::consume_card(const std::string& card_number, const double amount, const std::string& merchant)
 {
+    std::lock_guard lock(database_mutex);
+
     // Check whether the card number exist and account is in normal status.
     sqlite3_prepare_v2(database, "SELECT Status FROM Users WHERE CardNumber = ?", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
@@ -246,6 +256,8 @@ void Database::consume_card(const std::string& card_number, const double amount,
 
 std::vector<std::string> Database::query_transactions(const std::string& card_number)
 {
+    std::lock_guard lock(database_mutex);
+
     sqlite3_prepare_v2(database, "SELECT TransactionTime, Amount, Balance, Operator FROM Transactions WHERE CardNumber = ? ORDER BY ID DESC", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
 
@@ -256,7 +268,7 @@ std::vector<std::string> Database::query_transactions(const std::string& card_nu
         auto balance = sqlite3_column_double(cursor, 2);
         auto op = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
 
-        records.emplace_back(std::format(TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), op));
+        records.emplace_back(std::format(DB_TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), op));
     }
 
     if (records.empty())
