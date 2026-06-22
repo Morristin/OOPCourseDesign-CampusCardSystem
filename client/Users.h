@@ -34,8 +34,8 @@ public:
 
 class Student : public User {
 protected:
-    [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
-    Dashboard dashboard = {
+    [[nodiscard]] Dashboard main_dashboard() const override { return student_dashboard; }
+    Dashboard student_dashboard = {
         MenuItem("Consume", "Consume the money with the info provided by merchant.", [this] { consume(); }),
         MenuItem("Query Transactions", "Query your transaction history.", [this] { query_own_records(); })
     };
@@ -49,9 +49,9 @@ public:
 
 class Operator : public User {
 protected:
-    [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
+    [[nodiscard]] Dashboard main_dashboard() const override { return operator_dashboard; }
 
-    Dashboard student_management = {
+    Dashboard student_management_dashboard = {
         MenuItem("Create Student", "Add student account with student information.", [this] { create_student(); }),
         MenuItem("Import Students", "Create multiple student accounts using CSV.", [this] { create_multiple_student(); }),
         MenuItem("Delete Student", "Delete existing student account with student ID.", [this] { delete_student(); }),
@@ -59,8 +59,8 @@ protected:
         MenuItem("Query Abnormal Accounts", "List the frozen or deleted student account.", [this] { query_abnormal_accounts(); })
     };
 
-    Dashboard dashboard = {
-        MenuItem("Manage Student Information", "Create, modify or delete student account.", &student_management),
+    Dashboard operator_dashboard = {
+        MenuItem("Manage Student Information", "Create, modify or delete student account.", &student_management_dashboard),
         MenuItem("Manage Student Accounts", "Freeze, delete or restore student account.", [this] { update_student_status(); }),
         MenuItem("Recharge", "Recharge money into a card.", [this] { recharge_card(); }),
         MenuItem("Query Transactions", "Query the transaction history of a card.", [this] { query_transactions(); })
@@ -82,11 +82,12 @@ public:
 
 class SuperOperator : public Operator {
 protected:
-    [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
-    Dashboard dashboard = {
+    [[nodiscard]] Dashboard main_dashboard() const override { return superoperator_dashboard; }
+    Dashboard superoperator_dashboard = {
         MenuItem("Create Operator", "Create an operator.", [this] { create_operator(); }),
         MenuItem("Delete Operator", "Delete an operator.", [this] { delete_operator(); }),
-        MenuItem("Reset Operator Password", "Reset an operator's password.", [this] { reset_operator_password(); })
+        MenuItem("Reset Operator Password", "Reset an operator's password.", [this] { reset_operator_password(); }),
+        MenuItem("Switch to Operator Dashboard", "Enter the operator view. (Using 'b' to return here)", &operator_dashboard)
     };
 
     void create_operator() const;
