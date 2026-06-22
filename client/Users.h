@@ -59,12 +59,17 @@ protected:
         MenuItem("Query Abnormal Accounts", "List the frozen or deleted student account.", [this] { query_abnormal_accounts(); })
     };
 
+    Dashboard transaction_management_dashboard = {
+        MenuItem("Query Transactions", "Query the transaction history of a card.", [this] { query_transactions(); }),
+        MenuItem("Query Merchant Transactions", "Query the transaction history of a merchant.", [this] { query_merchant_transactions(); }),
+        MenuItem("Export Transactions", "Export all transactions into specific CSV file.", [this] { export_transaction(); })
+    };
+
     Dashboard operator_dashboard = {
         MenuItem("Manage Student Information", "Create, modify or delete student account.", &student_management_dashboard),
         MenuItem("Manage Student Accounts", "Freeze, delete or restore student account.", [this] { update_student_status(); }),
         MenuItem("Recharge", "Recharge money into a card.", [this] { recharge_card(); }),
-        MenuItem("Query Transactions", "Query the transaction history of a card.", [this] { query_transactions(); }),
-        MenuItem("Export Transactions", "Export all transactions into specific CSV file.", [this] { export_transaction(); })
+        MenuItem("Manage Transactions", "Query or export transactions", &transaction_management_dashboard)
     };
 
     void create_student() const;
@@ -76,6 +81,7 @@ protected:
     void update_student_status() const;
     void query_abnormal_accounts() const;
     void query_transactions() const;
+    void query_merchant_transactions() const;
     void export_transaction() const;
 
 public:

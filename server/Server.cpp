@@ -236,6 +236,12 @@ void Server::handle_query_own_transactions(Session& session)
     handle_query_transactions(session);
 }
 
+void Server::handle_query_merchant(const Session& session)
+{
+    const std::string merchant = session.message["merchant"];
+    execute_and_response_long(session, [&]() { return database.query_merchant_transactions(merchant); });
+}
+
 void Server::handle_export_transactions(const Session& session)
 {
     execute_and_response_long(session, [&] { return database.export_transactions(); });

@@ -300,8 +300,29 @@ std::vector<std::string> Database::query_transactions(const std::string& card_nu
     return records;
 }
 
+std::vector<std::string> Database::query_merchant_transactions(const std::string& merchant)
+{
+    std::lock_guard lock(database_mutex);
+
+    constexpr auto SQL = "SELECT TransactionTime, Amount, Balance, Operator FROM Transactions WHERE Operator = ? ORDER BY TransactionTime DESC";
+    sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, merchant.c_str(), -1, SQLITE_STATIC);
+
+    std::vector<std::string> records;
+    while (sqlite3_step(cursor) == SQLITE_ROW) {
+        std::string time = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        double amount = sqlite3_column_double(cursor, 1);
+        double balance = sqlite3_column_double(cursor, 2);
+
+        records.emplace_back(std::format(DB_TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), merchant));
+    }
+
+    return records;
+}
+
 std::vector<std::string> Database::export_transactions()
 {
+    std::lock_guard lock(database_mutex);
     std::vector<std::string> records;
 
     constexpr auto SQL = "SELECT TransactionTime, Amount, Balance, Operator FROM Transactions ORDER BY TransactionTime DESC";
