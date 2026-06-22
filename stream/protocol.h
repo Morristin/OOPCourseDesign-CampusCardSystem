@@ -25,6 +25,7 @@ constexpr std::string_view ACCOUNT_ABNORMAL = "AccountAbnormal";
 constexpr std::string_view BALANCE_INSUFFICIENT = "BalanceInsufficient";
 constexpr std::string_view PASSWORD_WRONG = "PasswordWrong";
 constexpr std::string_view TARGET_NOT_STUDENT = "TargetNotStudent";
+constexpr std::string_view TRANSACTION_NOT_FOUND = "TransactionNotFound";
 }
 
 namespace Password {

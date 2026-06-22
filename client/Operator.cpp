@@ -170,18 +170,12 @@ void Operator::query_transactions() const
     client.send_msg(std::format(ACTION_QUERY_TRANSACTION, card_number));
 
     auto start_msg = client.receive_msg();
-    if (start_msg["status"] == MsgStatus::FAILED) {
-        std::cout << OutputType::ERROR << "Query failed: " << start_msg["message"] << OutputType::RESET << std::endl;
-        return;
-    }
-
-    int length = std::stoi(start_msg["length"]);
-    if (length == 0) {
+    if (start_msg["status"] == MsgStatus::FAILED && start_msg["message"] == ErrorMsg::TRANSACTION_NOT_FOUND) {
         std::cout << OutputType::WARNING << "Cannot find any records on this card number." << OutputType::RESET << std::endl;
         return;
     }
 
-    std::cout << OutputType::SUCCESS << std::format("Successfully found {} records:", length) << OutputType::RESET << std::endl;
+    std::cout << OutputType::SUCCESS << std::format("Successfully found {} records:", std::stoi(start_msg["length"])) << OutputType::RESET << std::endl;
     std::cout << OutputType::THEME << "                 Time  |  Amount  |  Balance  | OP / Merchant " << OutputType::RESET << std::endl;
 
     for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())

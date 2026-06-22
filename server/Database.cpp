@@ -255,8 +255,11 @@ std::vector<std::string> Database::query_transactions(const std::string& card_nu
         auto amount = sqlite3_column_double(cursor, 1);
         auto balance = sqlite3_column_double(cursor, 2);
         auto op = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
+
         records.emplace_back(std::format(TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), op));
     }
 
+    if (records.empty())
+        throw DatabaseException(ErrorMsg::TRANSACTION_NOT_FOUND);
     return records;
 }
