@@ -11,6 +11,28 @@ static constexpr auto BIND_ADDRESS_FAILED = 21;
 static constexpr auto LISTEN_FAILED = 22;
 static auto logger = Logger(__FILE__);
 
+/**
+ * Execute the func given and generate simple response.
+ *
+ * @param session The session is used to send response message with its stream.
+ * @param func It's recommended to use lambda function directly.
+ * @return If any exception is caught, return err.what(). Else return blank string.
+ *
+ * For example, @code std::string err = execute_with_response(session, [&]() { func(); });
+ */
+template <typename Func>
+std::string Server::execute_and_response(const Session& session, Func&& func)
+{
+    try {
+        func();
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+        return "";
+    } catch (const DatabaseException& err) {
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+        return err.what();
+    }
+}
+
 Server::Server()
 {
     setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &ALLOW_PORT_REUSE, sizeof(ALLOW_PORT_REUSE));
@@ -94,29 +116,19 @@ void Server::handle_add_operator(const Session& session)
 {
     const auto username = session.message["username"];
     const auto password = session.message["password"];
+    const auto err = execute_and_response(session, [&]() { database.create_account(username, password, Permission::OPERATOR); });
 
-    try {
-        database.create_account(username, password, Permission::OPERATOR);
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
-    } catch (const DatabaseException& err) {
-        if (err.what() == ErrorMsg::USER_ALREADY_EXISTS)
-            session.logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::USER_ALREADY_EXISTS));
-    }
+    if (err == ErrorMsg::USER_ALREADY_EXISTS)
+        session.logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
 }
 
 void Server::handle_del_operator(const Session& session)
 {
     const auto username = session.message["username"];
+    const auto err = execute_and_response(session, [&]() { database.del_operator(username); });
 
-    try {
-        database.del_operator(username);
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
-    } catch (const DatabaseException& err) {
-        if (err.what() == ErrorMsg::USER_NOT_FOUND)
-            session.logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::USER_NOT_FOUND));
-    }
+    if (err == ErrorMsg::USER_NOT_FOUND)
+        session.logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
 }
 
 void Server::handle_add_student(const Session& session)
@@ -126,24 +138,13 @@ void Server::handle_add_student(const Session& session)
     const std::string student_id = session.message["student_id"];
     const std::string department = session.message["department"];
 
-    try {
-        database.register_student(real_name, gender, student_id, department);
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
-    } catch (const DatabaseException& err) {
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
-    }
+    const auto err = execute_and_response(session, [&]() { database.register_student(real_name, gender, student_id, department); });
 }
 
 void Server::handle_del_student(const Session& session)
 {
     const std::string student_id = session.message["student_id"];
-
-    try {
-        database.delete_student(student_id);
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
-    } catch (const DatabaseException& err) {
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
-    }
+    const auto err = execute_and_response(session, [&]() { database.delete_student(student_id); });
 }
 
 void Server::handle_update_student(const Session& session)
@@ -153,12 +154,7 @@ void Server::handle_update_student(const Session& session)
     const std::string gender = session.message["gender"];
     const std::string department = session.message["department"];
 
-    try {
-        database.update_student(student_id, real_name, gender, department);
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
-    } catch (const DatabaseException& err) {
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
-    }
+    const auto err = execute_and_response(session, [&]() { database.update_student(student_id, real_name, gender, department); });
 }
 
 void Server::handle_recharge(const Session& session)
@@ -166,12 +162,7 @@ void Server::handle_recharge(const Session& session)
     const std::string card_number = session.message["card_number"];
     const double amount = std::stod(session.message["amount"]);
 
-    try {
-        database.recharge_card(card_number, amount, session.username);
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
-    } catch (const DatabaseException& err) {
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
-    }
+    const auto err = execute_and_response(session, [&]() { database.recharge_card(card_number, amount, session.username); });
 }
 
 void Server::handle_update_status(const Session& session)
@@ -179,12 +170,7 @@ void Server::handle_update_status(const Session& session)
     const std::string username = session.message["username"];
     const int new_status = std::stoi(session.message["status"]);
 
-    try {
-        database.update_account_status(username, new_status);
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
-    } catch (const DatabaseException& err) {
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
-    }
+    const auto err = execute_and_response(session, [&]() { database.update_account_status(username, new_status); });
 }
 
 void Server::handle_consume(const Session& session)
@@ -193,12 +179,7 @@ void Server::handle_consume(const Session& session)
     const double amount = std::stod(session.message["amount"]);
     const std::string merchant = session.message["merchant"];
 
-    try {
-        database.consume_card(card_number, amount, merchant);
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
-    } catch (const DatabaseException& err) {
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
-    }
+    const auto err = execute_and_response(session, [&]() { database.consume_card(card_number, amount, merchant); });
 }
 
 void Server::handle_query_transactions(const Session& session)

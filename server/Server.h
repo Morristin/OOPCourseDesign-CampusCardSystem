@@ -33,6 +33,10 @@ private:
     // Database Connector
     Database database = Database();
 
+    // Template Method
+    template <typename Func>
+    static std::string execute_and_response(const Session& session, Func&& func);
+
     // Route Struct & Route Map
     struct Route {
         int permission_requirement;
