@@ -231,3 +231,8 @@ void Server::handle_query_own_transactions(Session& session)
     session.message = Parser(std::format(Action::QUERY_TRANSACTION, user_info["card_number"]));
     handle_query_transactions(session);
 }
+
+void Server::handle_export_transactions(const Session& session)
+{
+    execute_and_response_long(session, [&] { return database.export_transactions(); });
+}

@@ -299,3 +299,22 @@ std::vector<std::string> Database::query_transactions(const std::string& card_nu
         throw DatabaseException(ErrorMsg::TRANSACTION_NOT_FOUND);
     return records;
 }
+
+std::vector<std::string> Database::export_transactions()
+{
+    std::vector<std::string> records;
+
+    constexpr auto SQL = "SELECT TransactionTime, Amount, Balance, Operator FROM Transactions ORDER BY TransactionTime DESC";
+    sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);
+
+    while (sqlite3_step(cursor) == SQLITE_ROW) {
+        std::string time = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        double amount = sqlite3_column_double(cursor, 1);
+        double balance = sqlite3_column_double(cursor, 2);
+        std::string op = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
+
+        records.emplace_back(std::format(DB_TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), op));
+    }
+
+    return records;
+}

@@ -63,7 +63,8 @@ protected:
         MenuItem("Manage Student Information", "Create, modify or delete student account.", &student_management_dashboard),
         MenuItem("Manage Student Accounts", "Freeze, delete or restore student account.", [this] { update_student_status(); }),
         MenuItem("Recharge", "Recharge money into a card.", [this] { recharge_card(); }),
-        MenuItem("Query Transactions", "Query the transaction history of a card.", [this] { query_transactions(); })
+        MenuItem("Query Transactions", "Query the transaction history of a card.", [this] { query_transactions(); }),
+        MenuItem("Export Transactions", "Export all transactions into specific CSV file.", [this] { export_transaction(); })
     };
 
     void create_student() const;
@@ -75,6 +76,7 @@ protected:
     void update_student_status() const;
     void query_abnormal_accounts() const;
     void query_transactions() const;
+    void export_transaction() const;
 
 public:
     Operator(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };

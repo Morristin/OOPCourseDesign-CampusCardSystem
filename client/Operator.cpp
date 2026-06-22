@@ -181,3 +181,30 @@ void Operator::query_transactions() const
 
     std::cout << OutputType::SUCCESS << "Transmission Complete." << OutputType::RESET << std::endl;
 }
+
+#include <cstdio>
+#include <fstream>
+
+void Operator::export_transaction() const
+{
+    std::string filename;
+    std::cout << "Please enter the filename to save all records (e.g., all_records.csv): " << std::endl;
+    std::cin >> filename;
+
+    std::ofstream out_file(filename);
+    if (!out_file.is_open()) {
+        std::cout << OutputType::ERROR << "Failed to create file. Please check the path or permissions." << OutputType::RESET << std::endl;
+        return;
+    }
+
+    client.send_msg(Action::EXPORT_TRANSACTION.data());
+    const auto start_msg = client.receive_msg();
+
+    out_file << "Time, Amount, Balance, Operator / Merchant\n";
+
+    for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())
+        out_file << std::format("{}, {}, {}, {}\n", data_msg["time"], data_msg["amount"], data_msg["balance"], data_msg["operator"]);
+
+    out_file.close();
+    std::cout << OutputType::SUCCESS << std::format("Successfully exported {} records to {}.", std::stoi(start_msg["length"]), filename) << OutputType::RESET << std::endl;
+}

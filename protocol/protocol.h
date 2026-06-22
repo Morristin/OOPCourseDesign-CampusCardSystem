@@ -75,6 +75,7 @@ constexpr std::string_view CONSUME = "action:consume,card_number:{},amount:{},me
 constexpr std::string_view QUERY_TRANSACTION = "action:query_transaction,card_number:{}";
 constexpr std::string_view QUERY_OWN_TRANSACTION = "action:query_own_transaction";
 constexpr std::string_view QUERY_ABNORMAL_ACCOUNTS = "action:query_abnormal_accounts";
+constexpr std::string_view EXPORT_TRANSACTION = "action:export_transaction";
 }
 
 constexpr std::string_view DB_ABNORMAL_ACCOUNT = "username:{},card_number:{},status:{}";
