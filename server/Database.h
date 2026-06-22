@@ -34,6 +34,7 @@ public:
     void create_account(const std::string& username, const std::string& password, int permission);
     void delete_operator(const std::string& username);
     void update_account_status(const std::string& username, int new_status);
+    std::vector<std::string> query_abnormal_accounts();
 
     void create_student(const std::string& real_name, const std::string& gender, const std::string& student_id, const std::string& department);
     void delete_student(const std::string& student_id);

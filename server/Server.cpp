@@ -22,11 +22,27 @@ static auto logger = Logger(__FILE__);
  * @return If any exception is caught, return err.what(). Else return blank string.
  */
 template <typename Func>
-std::string Server::execute_and_response(const Session& session, Func&& func)
+std::string execute_and_response(const Session& session, Func&& func)
 {
     try {
         func();
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+        return "";
+    } catch (const DatabaseException& err) {
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
+        return err.what();
+    }
+}
+
+template <typename Func>
+std::string execute_and_response_long(const Session& session, Func&& func)
+{
+    try {
+        const auto records = func();
+        session.stream.send_msg(std::format(LONG_MSG_START, MsgStatus::SUCCESS, records.size()));
+        for (const auto& rec : records)
+            session.stream.send_msg(rec);
+        session.stream.send_msg(std::format(LONG_MSG_END, MsgStatus::SUCCESS, records.size()));
         return "";
     } catch (const DatabaseException& err) {
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
@@ -195,19 +211,15 @@ void Server::handle_consume(const Session& session)
     const auto err = execute_and_response(session, [&] { database.consume_card(card_number, amount, merchant); });
 }
 
+void Server::handle_query_abnormal_accounts(const Session& session)
+{
+    execute_and_response_long(session, [&] { return database.query_abnormal_accounts(); });
+}
+
 void Server::handle_query_transactions(const Session& session)
 {
     const std::string card_number = session.message["card_number"];
-
-    try {
-        const auto records = database.query_transactions(card_number);
-        session.stream.send_msg(std::format(LONG_MSG_START, MsgStatus::SUCCESS, records.size()));
-        for (const auto& rec : records)
-            session.stream.send_msg(rec);
-        session.stream.send_msg(std::format(LONG_MSG_END, MsgStatus::SUCCESS, records.size()));
-    } catch (const DatabaseException& err) {
-        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
-    }
+    execute_and_response_long(session, [&] { return database.query_transactions(card_number); });
 }
 
 void Server::handle_query_own_transactions(Session& session)

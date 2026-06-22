@@ -99,6 +99,30 @@ void Database::update_account_status(const std::string& username, const int new_
     sqlite3_step(cursor);
 }
 
+std::vector<std::string> Database::query_abnormal_accounts()
+{
+    std::vector<std::string> records;
+
+    constexpr auto SQL = "SELECT Username, CardNumber, Status FROM Users WHERE Status != ?";
+    sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);
+    sqlite3_bind_int(cursor, 1, UserStatus::NORMAL);
+
+    while (sqlite3_step(cursor) == SQLITE_ROW) {
+        std::string username = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        std::string card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
+        const int origin_status = sqlite3_column_int(cursor, 2);
+
+        std::string status;
+        if (origin_status == UserStatus::FROZEN)
+            status = "Frozen";
+        else if (origin_status == UserStatus::DELETED)
+            status = "Deleted";
+        records.emplace_back(std::format(DB_ABNORMAL_ACCOUNT, username, card_number, status));
+    }
+
+    return records;
+}
+
 void Database::delete_operator(const std::string& username)
 {
     std::lock_guard lock(database_mutex);

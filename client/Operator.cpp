@@ -141,6 +141,24 @@ void Operator::recharge_card() const
         std::cout << OutputType::ERROR << "Failed to recharge. The account is frozen or deleted." << OutputType::RESET << std::endl;
 }
 
+void Operator::query_abnormal_accounts() const
+{
+    client.send_msg(Action::QUERY_ABNORMAL_ACCOUNTS.data());
+
+    auto start_msg = client.receive_msg();
+    if (int length = std::stoi(std::string(start_msg["length"])); length == 0) {
+        std::cout << OutputType::SUCCESS << "No abnormal accounts found. Database is clean." << OutputType::RESET << std::endl;
+        auto _ = client.receive_msg(); // Receive end message.
+        return;
+    }
+
+    std::cout << OutputType::WARNING << std::format("Successfully found {} abnormal accounts:", std::stoi(start_msg["length"])) << OutputType::RESET << std::endl;
+    std::cout << std::format("  {:<15} | {:<15} | {:<10}", "Username", "CardNumber", "Status") << std::endl;
+
+    for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())
+        std::cout << std::format("  {:<15} | {:<15} | {:<10}", data_msg["username"], data_msg["card_number"], data_msg["status"]) << std::endl;
+}
+
 void Operator::query_transactions() const
 {
     std::string card_number;

@@ -56,6 +56,7 @@ protected:
         MenuItem("Import Students", "Create multiple student accounts using CSV.", [this] { create_multiple_student(); }),
         MenuItem("Delete Student", "Delete existing student account with student ID.", [this] { delete_student(); }),
         MenuItem("Modify Student Info", "Modify existing student info.", [this] { update_student_userinfo(); }),
+        MenuItem("Query Abnormal Accounts", "List the frozen or deleted student account.", [this] { query_abnormal_accounts(); })
     };
 
     Dashboard dashboard = {
@@ -72,6 +73,7 @@ protected:
 
     void recharge_card() const;
     void update_student_status() const;
+    void query_abnormal_accounts() const;
     void query_transactions() const;
 
 public:
@@ -84,7 +86,7 @@ protected:
     Dashboard dashboard = {
         MenuItem("Create Operator", "Create an operator.", [this] { create_operator(); }),
         MenuItem("Delete Operator", "Delete an operator.", [this] { delete_operator(); }),
-        MenuItem("Reset Operator Password", "Reset an operator's password.", [this] { reset_operator_password(); }),
+        MenuItem("Reset Operator Password", "Reset an operator's password.", [this] { reset_operator_password(); })
     };
 
     void create_operator() const;
