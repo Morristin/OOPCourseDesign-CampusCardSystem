@@ -1,6 +1,7 @@
 #include "Client.h"
 
 #include "../logger/Logger.h"
+#include "../protocol/colors.h"
 #include "../protocol/protocol.h"
 
 #include <arpa/inet.h>
@@ -51,11 +52,6 @@ Parser Client::login() const
         std::cout << "Enter your username and password here: " << std::endl;
         std::cin >> username >> password;
 
-        if (username.find(',') != std::string::npos || username.find(':') != std::string::npos) {
-            std::cout << "You can not include special character in username" << std::endl;
-            continue;
-        }
-
         send_msg(std::format(Action::LOGIN, username, password));
         const auto message = receive_msg();
 
@@ -65,13 +61,13 @@ Parser Client::login() const
         }
 
         if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::USER_NOT_FOUND)
-            std::cout << "You have not register yet. Check your name or contact operator." << std::endl;
+            std::cout << OutputType::ERROR << "You have not register yet. Check your name or contact operator." << OutputType::RESET << std::endl;
         else if (message["status"] == MsgStatus::FAILED && message["message"] == ErrorMsg::PASSWORD_WRONG)
-            std::cout << "Your password is not correct. Please try again." << std::endl;
+            std::cout << OutputType::ERROR << "Your password is not correct. Please try again." << OutputType::RESET << std::endl;
 
-        else if (std::stoi(message["user_status"]) == UserStatus::DELETED)
-            std::cout << "Your account has been deleted. Contact operator for help." << std::endl;
-        else if (std::stoi(message["user_status"]) == UserStatus::FROZEN)
-            std::cout << "Your account has been frozen. Please contact operator." << std::endl;
+        if (message["status"] == MsgStatus::SUCCESS && std::stoi(message["user_status"]) == UserStatus::DELETED)
+            std::cout << OutputType::WARNING << "Your account has been deleted. Contact operator for help." << OutputType::RESET << std::endl;
+        else if (message["status"] == MsgStatus::SUCCESS && std::stoi(message["user_status"]) == UserStatus::FROZEN)
+            std::cout << OutputType::WARNING << "Your account has been frozen. Please contact operator." << OutputType::RESET << std::endl;
     }
 }
