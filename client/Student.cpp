@@ -26,3 +26,20 @@ void Student::consume() const
     else if (response["message"] == ErrorMsg::ACCOUNT_ABNORMAL)
         std::cout << OutputType::ERROR << "Consumption Failed. Your account is frozen or deleted. Please contact operator." << OutputType::RESET << std::endl;
 }
+
+void Student::query_own_records() const
+{
+    client.send_msg(Action::QUERY_OWN_TRANSACTION.data());
+
+    auto start_msg = client.receive_msg();
+    if (start_msg["status"] == MsgStatus::FAILED && start_msg["message"] == ErrorMsg::TRANSACTION_NOT_FOUND) {
+        std::cout << OutputType::WARNING << "Cannot find any records on your card." << OutputType::RESET << std::endl;
+        return;
+    }
+
+    std::cout << OutputType::SUCCESS << std::format("Successfully found {} records:", std::stoi(start_msg["length"])) << OutputType::RESET << std::endl;
+    std::cout << OutputType::THEME << "                 Time  |  Amount  |  Balance  | OP / Merchant " << OutputType::RESET << std::endl;
+
+    for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())
+        std::cout << std::format("  {}  |  {:>6.2f}  |  {:>7.2f}  | {}", data_msg["time"], std::stod(data_msg["amount"]), std::stod(data_msg["balance"]), data_msg["operator"]) << std::endl;
+}

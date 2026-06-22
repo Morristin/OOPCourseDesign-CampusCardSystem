@@ -36,10 +36,12 @@ class Student : public User {
 protected:
     [[nodiscard]] Dashboard main_dashboard() const override { return dashboard; }
     Dashboard dashboard = {
-        MenuItem("Consume", "Consume the money with the amount and merchant provided by money receiver.", [this] { consume(); }),
+        MenuItem("Consume", "Consume the money with the info provided by merchant.", [this] { consume(); }),
+        MenuItem("Query Transactions", "Query your transaction history.", [this] { query_own_records(); })
     };
 
     void consume() const;
+    void query_own_records() const;
 
 public:
     Student(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };

@@ -209,3 +209,13 @@ void Server::handle_query_transactions(const Session& session)
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
     }
 }
+
+void Server::handle_query_own_transactions(Session& session)
+{
+    // Get the real information of user using data stored in session.
+    const Parser user_info(database.query_account(session.username));
+
+    // Replace the message in session and reuse the Server::handle_query_transactions().
+    session.message = Parser(std::format(Action::QUERY_TRANSACTION, user_info["card_number"]));
+    handle_query_transactions(session);
+}

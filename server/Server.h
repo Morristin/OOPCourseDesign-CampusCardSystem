@@ -57,6 +57,7 @@ private:
         { "recharge", { Permission::OPERATOR, [this](const Session& s) { handle_recharge(s); } } },
         { "consume", { Permission::STUDENT, [this](const Session& s) { handle_consume(s); } } },
         { "query_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_query_transactions(s); } } },
+        { "query_own_transaction", { Permission::STUDENT, [this](Session& s) { handle_query_own_transactions(s); } } }
     };
 
 public:
@@ -77,6 +78,7 @@ public:
     void handle_recharge(const Session& session);
     void handle_consume(const Session& session);
     void handle_query_transactions(const Session& session);
+    void handle_query_own_transactions(Session& session);
 };
 
 #endif

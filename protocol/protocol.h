@@ -72,6 +72,7 @@ constexpr std::string_view UPDATE_STUDENT_USERINFO = "action:update_student_user
 constexpr std::string_view RECHARGE = "action:recharge,card_number:{},amount:{}";
 constexpr std::string_view CONSUME = "action:consume,card_number:{},amount:{},merchant:{}";
 constexpr std::string_view QUERY_TRANSACTION = "action:query_transaction,card_number:{}";
+constexpr std::string_view QUERY_OWN_TRANSACTION = "action:query_own_transaction";
 }
 
 constexpr std::string_view DB_USER_INFO = "password:{},permission:{},status:{},card_number:{}";
