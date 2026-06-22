@@ -43,10 +43,9 @@ Server::Server()
         const int client = accept(server, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
 
         std::thread([client, this]() {
-            auto client_logger = Logger(std::format("Client {}", client));
-
             auto stream = Stream(client);
-            Session session { stream, "", Permission::DEFAULT, Parser("") };
+            auto client_logger = Logger(std::format("Client {}", client));
+            Session session { stream, client_logger, "", Permission::DEFAULT, Parser("") };
 
             try {
                 while (true) {
@@ -55,7 +54,7 @@ Server::Server()
 
                     if (auto route = routes.find(action); route == routes.end()) {
                         stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::UNKNOWN_ACTION));
-                        client_logger.error(std::format("Received an unknown action: {}", action));
+                        session.logger.error(std::format("Received an unknown action: {}", action));
                     }
 
                     else if (session.permission >= route->second.permission_requirement)
@@ -63,11 +62,11 @@ Server::Server()
 
                     else {
                         stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::PERMISSION_DENIED));
-                        client_logger.warning(std::format("Permission denied: {} require {}. Current permission: {}.", action, route->second.permission_requirement, session.permission));
+                        session.logger.warning(std::format("Permission denied: {} require {}. Current permission: {}.", action, route->second.permission_requirement, session.permission));
                     }
                 }
             } catch (const std::exception& err) {
-                client_logger.warning(std::format("Client handling error: {}", err.what()));
+                session.logger.warning(std::format("Client handling error: {}", err.what()));
                 close(client);
             }
         }).detach();
@@ -85,7 +84,7 @@ void Server::handle_login(Session& session)
         session.permission = std::stoi(login_user_status.permission.data());
 
         session.stream.send_msg(login_user_status.message());
-        logger.info(std::format("User {} successfully logged in.", username));
+        session.logger.info(std::format("User {} successfully logged in.", username));
     } catch (const DatabaseException& err) {
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, err.what()));
     }
@@ -101,7 +100,7 @@ void Server::handle_add_operator(const Session& session)
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
     } catch (const DatabaseException& err) {
         if (err.what() == ErrorMsg::USER_ALREADY_EXISTS)
-            logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
+            session.logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::USER_ALREADY_EXISTS));
     }
 }
@@ -115,7 +114,7 @@ void Server::handle_del_operator(const Session& session)
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
     } catch (const DatabaseException& err) {
         if (err.what() == ErrorMsg::USER_NOT_FOUND)
-            logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
+            session.logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::USER_NOT_FOUND));
     }
 }

@@ -1,6 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include "../logger/Logger.h"
 #include "../stream/Stream.h"
 #include "Database.h"
 
@@ -9,8 +10,11 @@
 
 struct Session {
     Stream& stream;
+    Logger& logger;
+
     std::string username;
     int permission = Permission::DEFAULT;
+
     Parser message;
 };
 
