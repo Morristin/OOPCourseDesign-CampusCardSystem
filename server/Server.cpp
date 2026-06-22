@@ -5,6 +5,7 @@
 #include "../protocol/protocol.h"
 #include "Database.h"
 
+#include <csignal>
 #include <iostream>
 #include <netinet/in.h>
 #include <thread>
@@ -42,13 +43,15 @@ Server::Server()
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(DEFAULT_PORT);
 
+    std::signal(SIGPIPE, SIG_IGN); // To prevent server exit when pipe broken.
+
     if (const auto status = bind(server, reinterpret_cast<struct sockaddr*>(&server_addr), sizeof(server_addr)); status < 0)
         logger.critical("Can not bind address to server.");
     if (const auto status = listen(server, BACKLOG); status < 0)
         logger.critical("Can not start listen.");
 
     logger.info("Server started.");
-    std::cout << OutputType::SUCCESS << std::format("Server is started. Listen on port {}.", server_addr.sin_port) << OutputType::RESET << std::endl;
+    std::cout << OutputType::THEME << std::format("Server is started. Listen on port {}.", server_addr.sin_port) << OutputType::RESET << std::endl;
 }
 
 [[noreturn]] void Server::start()
@@ -63,9 +66,18 @@ Server::Server()
             auto client_logger = Logger(std::format("Client {}", client));
             Session session { stream, client_logger, "", Permission::DEFAULT, Parser("") };
 
+            session.logger.info(std::format("Successfully connected client {}", client));
+            std::cout << OutputType::THEME << std::format("Client {} connected.", client) << OutputType::RESET << std::endl;
+
             try {
                 while (true) {
                     session.message = stream.receive_msg();
+                    if (session.message["status"] == MsgStatus::FAILED && session.message["message"] == ErrorMsg::NETWORK_ERROR) {
+                        session.logger.info("Client disconnected.");
+                        std::cout << OutputType::SUCCESS << std::format("Client {} disconnected.", client) << OutputType::RESET << std::endl;
+                        break;
+                    }
+
                     const std::string action = session.message["action"];
 
                     if (auto route = routes.find(action); route == routes.end()) {
@@ -83,8 +95,10 @@ Server::Server()
                 }
             } catch (const std::exception& err) {
                 session.logger.warning(std::format("Client handling error: {}", err.what()));
-                close(client);
+                std::cout << OutputType::WARNING << std::format("Client {} disconnected as an error happened.", client) << OutputType::RESET << std::endl;
             }
+
+            close(client);
         }).detach();
     }
 }
