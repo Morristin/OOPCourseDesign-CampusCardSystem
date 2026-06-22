@@ -1,6 +1,6 @@
 #include "Logger.h"
 
-#include "../client/Client.h"
+#include "../protocol/colors.h"
 
 #include <iostream>
 
@@ -31,5 +31,5 @@ void Logger::write(const std::string& level, const std::string& message)
     else if (level == "ERROR" && DEBUG_MODE)
         std::cout << OutputType::ERROR << message << OutputType::RESET << std::endl;
     else if (level == "CRITICAL" && DEBUG_MODE)
-        std::cout << OutputType::CRITICAL <<"Serious error happens: " << message << OutputType::RESET << std::endl;
+        std::cout << OutputType::CRITICAL << "Serious error happens: " << message << OutputType::RESET << std::endl;
 }

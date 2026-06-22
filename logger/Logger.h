@@ -2,7 +2,6 @@
 #define LOGGER_H
 
 #include <fstream>
-#include <iostream>
 #include <mutex>
 #include <string>
 

@@ -1,5 +1,7 @@
 #include "Users.h"
 
+#include "../protocol/colors.h"
+
 #include <iostream>
 
 void User::show_dashboard() const

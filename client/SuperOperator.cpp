@@ -1,5 +1,6 @@
 #include "../logger/Logger.h"
-#include "../stream/protocol.h"
+#include "../protocol/colors.h"
+#include "../protocol/protocol.h"
 #include "Users.h"
 
 #include <iostream>

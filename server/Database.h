@@ -4,7 +4,7 @@
 #include <sqlite3.h>
 #include <string>
 
-#include "../stream/protocol.h"
+#include "../protocol/protocol.h"
 
 struct DatabaseException : std::exception {
 private:

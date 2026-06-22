@@ -1,5 +1,7 @@
-#include "../stream/protocol.h"
 #include "Users.h"
+
+#include "../protocol/colors.h"
+#include "../protocol/protocol.h"
 
 #include <iostream>
 #include <map>

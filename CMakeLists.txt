@@ -30,7 +30,8 @@ target_sources(Server
         logger/Logger.cpp
         stream/Stream.cpp
         stream/Parser.cpp
-        stream/protocol.h
+        protocol/protocol.h
+        protocol/colors.h
         PUBLIC
         server/Database.cpp
         server/Server.cpp
@@ -42,7 +43,8 @@ target_sources(Client
         logger/Logger.cpp
         stream/Stream.cpp
         stream/Parser.cpp
-        stream/protocol.h
+        protocol/protocol.h
+        protocol/colors.h
         client/Users.cpp
         client/SuperOperator.cpp
         client/Operator.cpp

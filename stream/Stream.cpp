@@ -1,7 +1,7 @@
 #include "Stream.h"
 
 #include "../logger/Logger.h"
-#include "protocol.h"
+#include "../protocol/protocol.h"
 
 #include <sys/socket.h>
 

@@ -1,7 +1,7 @@
 #include "Client.h"
 
 #include "../logger/Logger.h"
-#include "../stream/protocol.h"
+#include "../protocol/protocol.h"
 
 #include <arpa/inet.h>
 

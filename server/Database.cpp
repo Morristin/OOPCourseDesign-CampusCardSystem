@@ -43,7 +43,7 @@ void Database::initialize() const
 
 LoginUserStatus Database::check_identity(const std::string& username, const std::string& password)
 {
-    std::lock_guard<std::mutex> lock(database_mutex);
+    std::lock_guard lock(database_mutex);
 
     constexpr auto SQL = "SELECT Password, Permission, Status, CardNumber FROM Users WHERE Username = ?";
     sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);
@@ -64,7 +64,7 @@ LoginUserStatus Database::check_identity(const std::string& username, const std:
 
 void Database::create_account(const std::string& username, const std::string& password, int permission)
 {
-    std::lock_guard<std::mutex> lock(database_mutex);
+    std::lock_guard lock(database_mutex);
 
     constexpr auto SQL = "INSERT INTO Users (Username, Password, Permission, Status, CardNumber) VALUES (?, ?, ?, ?, ?)";
     sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);
@@ -83,7 +83,7 @@ void Database::create_account(const std::string& username, const std::string& pa
 
 void Database::del_operator(const std::string& username)
 {
-    std::lock_guard<std::mutex> lock(database_mutex);
+    std::lock_guard lock(database_mutex);
 
     constexpr auto SQL = "DELETE FROM Users WHERE Username = ? AND Permission = ?";
     sqlite3_prepare_v2(database, SQL, -1, &cursor, nullptr);

@@ -1,7 +1,7 @@
 #include "Server.h"
 
 #include "../logger/Logger.h"
-#include "../stream/protocol.h"
+#include "../protocol/protocol.h"
 #include "Database.h"
 
 #include <netinet/in.h>
@@ -14,11 +14,11 @@ static auto logger = Logger(__FILE__);
 /**
  * Execute the func given and generate simple response.
  *
- * @param session The session is used to send response message with its stream.
- * @param func It's recommended to use lambda function directly.
- * @return If any exception is caught, return err.what(). Else return blank string.
+ * Usage: @code std::string err = execute_with_response(session, [&]() { func(); }); @endcode
  *
- * For example, @code std::string err = execute_with_response(session, [&]() { func(); });
+ * @param session Used to provide stream to send response message with.
+ * @param func It's recommended to use lambda function.
+ * @return If any exception is caught, return err.what(). Else return blank string.
  */
 template <typename Func>
 std::string Server::execute_and_response(const Session& session, Func&& func)
@@ -116,7 +116,7 @@ void Server::handle_add_operator(const Session& session)
 {
     const auto username = session.message["username"];
     const auto password = session.message["password"];
-    const auto err = execute_and_response(session, [&]() { database.create_account(username, password, Permission::OPERATOR); });
+    const auto err = execute_and_response(session, [&] { database.create_account(username, password, Permission::OPERATOR); });
 
     if (err == ErrorMsg::USER_ALREADY_EXISTS)
         session.logger.warning(std::format("Try to add operator {} failed as username already exist.", username));
@@ -125,7 +125,7 @@ void Server::handle_add_operator(const Session& session)
 void Server::handle_del_operator(const Session& session)
 {
     const auto username = session.message["username"];
-    const auto err = execute_and_response(session, [&]() { database.del_operator(username); });
+    const auto err = execute_and_response(session, [&] { database.del_operator(username); });
 
     if (err == ErrorMsg::USER_NOT_FOUND)
         session.logger.warning(std::format("Try to delete operator {} failed as user not found.", username));
@@ -138,13 +138,13 @@ void Server::handle_add_student(const Session& session)
     const std::string student_id = session.message["student_id"];
     const std::string department = session.message["department"];
 
-    const auto err = execute_and_response(session, [&]() { database.register_student(real_name, gender, student_id, department); });
+    const auto err = execute_and_response(session, [&] { database.register_student(real_name, gender, student_id, department); });
 }
 
 void Server::handle_del_student(const Session& session)
 {
     const std::string student_id = session.message["student_id"];
-    const auto err = execute_and_response(session, [&]() { database.delete_student(student_id); });
+    const auto err = execute_and_response(session, [&] { database.delete_student(student_id); });
 }
 
 void Server::handle_update_student(const Session& session)
@@ -154,7 +154,7 @@ void Server::handle_update_student(const Session& session)
     const std::string gender = session.message["gender"];
     const std::string department = session.message["department"];
 
-    const auto err = execute_and_response(session, [&]() { database.update_student(student_id, real_name, gender, department); });
+    const auto err = execute_and_response(session, [&] { database.update_student(student_id, real_name, gender, department); });
 }
 
 void Server::handle_recharge(const Session& session)
@@ -162,7 +162,7 @@ void Server::handle_recharge(const Session& session)
     const std::string card_number = session.message["card_number"];
     const double amount = std::stod(session.message["amount"]);
 
-    const auto err = execute_and_response(session, [&]() { database.recharge_card(card_number, amount, session.username); });
+    const auto err = execute_and_response(session, [&] { database.recharge_card(card_number, amount, session.username); });
 }
 
 void Server::handle_update_status(const Session& session)
@@ -170,7 +170,7 @@ void Server::handle_update_status(const Session& session)
     const std::string username = session.message["username"];
     const int new_status = std::stoi(session.message["status"]);
 
-    const auto err = execute_and_response(session, [&]() { database.update_account_status(username, new_status); });
+    const auto err = execute_and_response(session, [&] { database.update_account_status(username, new_status); });
 }
 
 void Server::handle_consume(const Session& session)
@@ -179,7 +179,7 @@ void Server::handle_consume(const Session& session)
     const double amount = std::stod(session.message["amount"]);
     const std::string merchant = session.message["merchant"];
 
-    const auto err = execute_and_response(session, [&]() { database.consume_card(card_number, amount, merchant); });
+    const auto err = execute_and_response(session, [&] { database.consume_card(card_number, amount, merchant); });
 }
 
 void Server::handle_query_transactions(const Session& session)
