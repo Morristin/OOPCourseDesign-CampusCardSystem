@@ -4,6 +4,7 @@
 #include "../protocol/protocol.h"
 #include "csv_parser.h"
 
+#include <fstream>
 #include <iostream>
 #include <map>
 
@@ -202,16 +203,13 @@ void Operator::query_merchant_transactions() const
         std::cout << std::format("  {}  |  {:>6.2f}  |  {:>7.2f}  | {}", data_msg["time"], std::stod(data_msg["amount"]), std::stod(data_msg["balance"]), data_msg["operator"]) << std::endl;
 }
 
-#include <cstdio>
-#include <fstream>
-
 void Operator::export_transaction() const
 {
     std::string filename;
-    std::cout << "Please enter the filename to save all records (e.g., all_records.csv): " << std::endl;
+    std::cout << "Please enter the filename to save all records: " << std::endl;
     std::cin >> filename;
 
-    std::ofstream out_file(filename);
+    std::ofstream out_file(filename + ".csv");
     if (!out_file.is_open()) {
         std::cout << OutputType::ERROR << "Failed to create file. Please check the path or permissions." << OutputType::RESET << std::endl;
         return;
@@ -221,7 +219,6 @@ void Operator::export_transaction() const
     const auto start_msg = client.receive_msg();
 
     out_file << "Time, Amount, Balance, Operator / Merchant\n";
-
     for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())
         out_file << std::format("{}, {}, {}, {}\n", data_msg["time"], data_msg["amount"], data_msg["balance"], data_msg["operator"]);
 

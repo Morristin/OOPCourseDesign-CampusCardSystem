@@ -137,6 +137,16 @@ void Server::handle_login(Session& session)
     });
 }
 
+void Server::handle_export_server_logs(const Session& session)
+{
+    const auto logs = Logger::to_vector();
+    std::vector<std::string> formatted_logs;
+    formatted_logs.reserve(logs.size());
+    for (const auto& line : logs)
+        formatted_logs.emplace_back(std::format(LOG_LINE, line));
+    execute_and_response_long(session, [&] { return formatted_logs; });
+}
+
 void Server::handle_create_operator(const Session& session)
 {
     const auto username = session.message["username"];

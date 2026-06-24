@@ -4,6 +4,7 @@
 #include "../protocol/colors.h"
 #include "../protocol/protocol.h"
 
+#include <fstream>
 #include <iostream>
 
 static auto logger = Logger(__FILE__);
@@ -58,4 +59,26 @@ void SuperOperator::reset_operator_password() const
         std::cout << OutputType::CRITICAL << "Failed to reset password as an unknown error happened." << OutputType::RESET << std::endl;
         logger.warning(std::format("Unknown error happened while resetting operator's password: {}", response["message"]));
     }
+}
+
+void SuperOperator::export_system_logs() const
+{
+    std::string filename;
+    std::cout << "Please enter the filename to save system logs: " << std::endl;
+    std::cin >> filename;
+
+    std::ofstream out_file(filename + ".log");
+    if (!out_file.is_open()) {
+        std::cout << OutputType::ERROR << "Failed to create file. Please check the path or permissions." << OutputType::RESET << std::endl;
+        return;
+    }
+
+    client.send_msg(Action::EXPORT_SERVER_LOGS.data());
+    const auto start_msg = client.receive_msg();
+
+    for (auto data_msg = client.receive_msg(); std::string(data_msg["message"]) != "END"; data_msg = client.receive_msg())
+        out_file << std::string(data_msg["content"]) << "\n";
+
+    out_file.close();
+    std::cout << OutputType::SUCCESS << std::format("Successfully saved {} log lines to {}.", std::stoi(std::string(start_msg["length"])), filename) << OutputType::RESET << std::endl;
 }

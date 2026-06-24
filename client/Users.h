@@ -95,12 +95,14 @@ protected:
         MenuItem("Create Operator", "Create an operator.", [this] { create_operator(); }),
         MenuItem("Delete Operator", "Delete an operator.", [this] { delete_operator(); }),
         MenuItem("Reset Operator Password", "Reset an operator's password.", [this] { reset_operator_password(); }),
+        MenuItem("Export Server Logs", "export server logs to local file.", [this] { export_system_logs(); }),
         MenuItem("Switch to Operator Dashboard", "Enter the operator view. (Using 'b' to return here)", &operator_dashboard)
     };
 
     void create_operator() const;
     void delete_operator() const;
     void reset_operator_password() const;
+    void export_system_logs() const;
 
 public:
     SuperOperator(const Client& client, UserInformation user_information) : Operator(client, std::move(user_information)) { };

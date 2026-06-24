@@ -18,13 +18,28 @@ Logger::Logger(const std::string& file_name)
     }
 }
 
+std::vector<std::string> Logger::to_vector()
+{
+    std::lock_guard lock(log_mutex);
+    std::ifstream file(LOG_FILE);
+
+    std::vector<std::string> vector_logs;
+    std::string line;
+    while (std::getline(file, line))
+        vector_logs.emplace_back(line);
+    return vector_logs;
+}
+
 void Logger::write(const std::string& level, const std::string& message)
 {
     std::lock_guard lock(log_mutex);
 
+    static constexpr auto date_format = "%b %d %H:%M:%S";
+    static constexpr auto log_format = " {:<9} {}: {}\n";
+
     const auto tt = time(nullptr);
     log_file << std::put_time(std::localtime(&tt), date_format);
-    log_file << std::format(log_format, level, module_name, message) << std::flush;
+    log_file << std::format(log_format, std::format("[{}]", level), module_name, message) << std::flush;
 
     if (level == "WARNING" && DEBUG_MODE)
         std::cout << OutputType::WARNING << message << OutputType::RESET << std::endl;

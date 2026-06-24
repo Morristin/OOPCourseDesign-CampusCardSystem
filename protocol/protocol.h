@@ -60,6 +60,7 @@ constexpr std::string_view LOGIN_RESULT = "status:{},username:{},permission:{},u
 
 namespace Action {
 constexpr std::string_view LOGIN = "action:login,username:{},password:{}";
+constexpr std::string_view EXPORT_SERVER_LOGS = "action:export_server_logs";
 
 constexpr std::string_view CREATE_OPERATOR = "action:create_operator,username:{},password:{}";
 constexpr std::string_view DELETE_OPERATOR = "action:delete_operator,username:{}";
@@ -77,6 +78,8 @@ constexpr std::string_view QUERY_OWN_TRANSACTION = "action:query_own_transaction
 constexpr std::string_view QUERY_ABNORMAL_ACCOUNTS = "action:query_abnormal_accounts";
 constexpr std::string_view EXPORT_TRANSACTION = "action:export_transaction";
 }
+
+constexpr std::string_view LOG_LINE = "content:{}";
 
 constexpr std::string_view DB_ABNORMAL_ACCOUNT = "username:{},card_number:{},status:{}";
 constexpr std::string_view DB_USER_INFO = "password:{},permission:{},status:{},card_number:{}";

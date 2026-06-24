@@ -13,13 +13,13 @@ private:
     static std::mutex log_mutex;
     std::ofstream log_file;
 
-    static constexpr auto log_format = " [{}]\n{}: {}\n";
-    static constexpr auto date_format = "%b %d %H:%M:%S";
     void write(const std::string& level, const std::string& message);
 
 public:
     explicit Logger(const std::string& file_name);
     ~Logger() { log_file.close(); }
+
+    static std::vector<std::string> to_vector();
 
     void debug(const std::string& msg) { write("DEBUG", msg); }
     void info(const std::string& msg) { write("INFO", msg); }
