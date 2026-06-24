@@ -57,7 +57,8 @@ private:
         { "query_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_query_transactions(s); } } },
         { "query_own_transaction", { Permission::STUDENT, [this](Session& s) { handle_query_own_transactions(s); } } },
         { "query_merchant", { Permission::OPERATOR, [this](Session& s) { handle_query_merchant(s); } } },
-        { "export_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_export_transactions(s); } } }
+        { "export_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_export_transactions(s); } } },
+        { "generate_statistics", { Permission::OPERATOR, [this](const Session& s) { handle_generate_statistics(s); } } }
     };
 
 public:
@@ -83,6 +84,7 @@ public:
     void handle_query_own_transactions(Session& session);
     void handle_query_merchant(const Session& session);
     void handle_export_transactions(const Session& session);
+    void handle_generate_statistics(const Session& session);
 };
 
 #endif

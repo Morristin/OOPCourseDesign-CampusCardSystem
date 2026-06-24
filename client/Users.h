@@ -62,7 +62,8 @@ protected:
     Dashboard transaction_management_dashboard = {
         MenuItem("Query Transactions", "Query the transaction history of a card.", [this] { query_transactions(); }),
         MenuItem("Query Merchant Transactions", "Query the transaction history of a merchant.", [this] { query_merchant_transactions(); }),
-        MenuItem("Export Transactions", "Export all transactions into specific CSV file.", [this] { export_transaction(); })
+        MenuItem("Export Transactions", "Export all transactions into specific CSV file.", [this] { export_transaction(); }),
+        MenuItem("Generate statistics", "Generate statistics group by department, merchant, time or person.", [this] { generate_statistics(); })
     };
 
     Dashboard operator_dashboard = {
@@ -83,6 +84,7 @@ protected:
     void query_transactions() const;
     void query_merchant_transactions() const;
     void export_transaction() const;
+    void generate_statistics() const;
 
 public:
     Operator(const Client& client, UserInformation user_information) : User(client, std::move(user_information)) { };

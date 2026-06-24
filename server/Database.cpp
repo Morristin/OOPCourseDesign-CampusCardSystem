@@ -339,3 +339,48 @@ std::vector<std::string> Database::export_transactions()
 
     return records;
 }
+
+std::vector<std::string> Database::generate_statistics(const std::string& type)
+{
+    std::vector<std::string> records;
+    std::string sql;
+
+    constexpr std::string_view department_SQL = "SELECT UserInfo.Department, SUM(ABS(Transactions.Amount)), COUNT(Transactions.ID) "
+                                                "FROM Transactions JOIN Users ON Transactions.CardNumber = Users.CardNumber JOIN UserInfo ON Users.Username = UserInfo.Username "
+                                                "WHERE Transactions.Amount < 0 "
+                                                "GROUP BY UserInfo.Department";
+    constexpr std::string_view merchant_SQL = "SELECT Transactions.Operator, SUM(ABS(Transactions.Amount)), COUNT(Transactions.ID) "
+                                              "FROM Transactions "
+                                              "WHERE Transactions.Amount < 0 "
+                                              "GROUP BY Transactions.Operator";
+    constexpr std::string_view time_SQL = "SELECT strftime('%Y-%m', Transactions.TransactionTime), SUM(Transactions.Amount), COUNT(Transactions.ID) "
+                                          "FROM Transactions "
+                                          "WHERE Transactions.Amount < 0 "
+                                          "GROUP BY strftime('%Y-%m', Transactions.TransactionTime)";
+    constexpr std::string_view ranking_SQL = "SELECT UserInfo.RealName, SUM(ABS(Transactions.Amount)), COUNT(Transactions.ID) "
+                                             "FROM Transactions JOIN Users ON Transactions.CardNumber = Users.CardNumber JOIN UserInfo ON Users.Username = UserInfo.Username "
+                                             "WHERE Transactions.Amount < 0 "
+                                             "GROUP BY Users.Username "
+                                             "ORDER BY SUM(ABS(Transactions.Amount)) DESC "
+                                             "LIMIT 10";
+
+    if (type == "department")
+        sql = department_SQL;
+    else if (type == "merchant")
+        sql = merchant_SQL;
+    else if (type == "time")
+        sql = time_SQL;
+    else if (type == "ranking")
+        sql = ranking_SQL;
+
+    sqlite3_prepare_v2(database, sql.c_str(), -1, &cursor, nullptr);
+
+    while (sqlite3_step(cursor) == SQLITE_ROW) {
+        std::string category = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        double consumption = sqlite3_column_double(cursor, 1);
+        int count = sqlite3_column_int(cursor, 2);
+        records.emplace_back(std::format(DB_TRANSACTION_STATISTICS, category, std::format("{:.2f}", consumption), count));
+    }
+
+    return records;
+}

@@ -256,3 +256,9 @@ void Server::handle_export_transactions(const Session& session)
 {
     execute_and_response_long(session, [&] { return database.export_transactions(); });
 }
+
+void Server::handle_generate_statistics(const Session& session)
+{
+    const std::string type = session.message["type"];
+    execute_and_response_long(session, [&] { return database.generate_statistics(type); });
+}

@@ -45,6 +45,7 @@ public:
     std::vector<std::string> query_transactions(const std::string& card_number);
     std::vector<std::string> query_merchant_transactions(const std::string& merchant);
     std::vector<std::string> export_transactions();
+    std::vector<std::string> generate_statistics(const std::string& type);
 };
 
 #endif

@@ -77,12 +77,14 @@ constexpr std::string_view QUERY_TRANSACTION = "action:query_transaction,card_nu
 constexpr std::string_view QUERY_OWN_TRANSACTION = "action:query_own_transaction";
 constexpr std::string_view QUERY_ABNORMAL_ACCOUNTS = "action:query_abnormal_accounts";
 constexpr std::string_view EXPORT_TRANSACTION = "action:export_transaction";
+constexpr std::string_view GENERATE_STATISTICS = "action:generate_statistics,type:{}";
 }
 
 constexpr std::string_view LOG_LINE = "content:{}";
 
 constexpr std::string_view DB_ABNORMAL_ACCOUNT = "username:{},card_number:{},status:{}";
 constexpr std::string_view DB_USER_INFO = "password:{},permission:{},status:{},card_number:{}";
+constexpr std::string_view DB_TRANSACTION_STATISTICS = "category:{},consumption:{},count:{}";
 constexpr std::string_view DB_TRANSACTION_RECORD = "time:{},amount:{},balance:{},operator:{}";
 
 #endif

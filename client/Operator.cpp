@@ -154,7 +154,7 @@ void Operator::query_abnormal_accounts() const
     }
 
     std::cout << OutputType::WARNING << std::format("Successfully found {} abnormal accounts:", std::stoi(start_msg["length"])) << OutputType::RESET << std::endl;
-    std::cout << std::format("  {:<15} | {:<15} | {:<10}", "Username", "CardNumber", "Status") << std::endl;
+    std::cout << OutputType::THEME << std::format("  {:<15} | {:<15} | {:<10}", "Username", "CardNumber", "Status") << OutputType::RESET << std::endl;
 
     for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())
         std::cout << std::format("  {:<15} | {:<15} | {:<10}", data_msg["username"], data_msg["card_number"], data_msg["status"]) << std::endl;
@@ -175,9 +175,9 @@ void Operator::query_transactions() const
     }
 
     std::cout << OutputType::SUCCESS << std::format("Successfully found {} records:", std::stoi(start_msg["length"])) << OutputType::RESET << std::endl;
-    std::cout << OutputType::THEME << "                 Time  |  Amount  |  Balance  | OP / Merchant " << OutputType::RESET << std::endl;
+    std::cout << OutputType::THEME << std::format(" {:>19} | {:>6} | {:>7} | {}", "Time", "Amount", "Balance", "OP / Merchant") << OutputType::RESET << std::endl;
     for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())
-        std::cout << std::format("  {}  |  {:>6.2f}  |  {:>7.2f}  | {}", data_msg["time"], std::stod(data_msg["amount"]), std::stod(data_msg["balance"]), data_msg["operator"]) << std::endl;
+        std::cout << std::format(" {:>19} | {:>6.2f} | {:>7.2f} | {}", data_msg["time"], std::stod(data_msg["amount"]), std::stod(data_msg["balance"]), data_msg["operator"]) << std::endl;
 
     std::cout << OutputType::SUCCESS << "Transmission Complete." << OutputType::RESET << std::endl;
 }
@@ -198,9 +198,9 @@ void Operator::query_merchant_transactions() const
 
     const int length = std::stoi(std::string(start_msg["length"]));
     std::cout << OutputType::SUCCESS << std::format("Found {} records for {}:", length, merchant) << OutputType::RESET << std::endl;
-    std::cout << OutputType::THEME << "                 Time  |  Amount  |  Balance  | OP / Merchant " << OutputType::RESET << std::endl;
+    std::cout << OutputType::THEME << std::format(" {:>19} | {:>6} | {:>7} | {}", "Time", "Amount", "Balance", "OP / Merchant") << OutputType::RESET << std::endl;
     for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())
-        std::cout << std::format("  {}  |  {:>6.2f}  |  {:>7.2f}  | {}", data_msg["time"], std::stod(data_msg["amount"]), std::stod(data_msg["balance"]), data_msg["operator"]) << std::endl;
+        std::cout << std::format(" {:>19} | {:>6.2f} | {:>7.2f} | {}", data_msg["time"], std::stod(data_msg["amount"]), std::stod(data_msg["balance"]), data_msg["operator"]) << std::endl;
 }
 
 void Operator::export_transaction() const
@@ -224,4 +224,41 @@ void Operator::export_transaction() const
 
     out_file.close();
     std::cout << OutputType::SUCCESS << std::format("Successfully exported {} records to {}.", std::stoi(start_msg["length"]), filename) << OutputType::RESET << std::endl;
+}
+
+void Operator::generate_statistics() const
+{
+    std::string choice, type;
+    std::cout << "Please select one of the following statistics dimension:" << std::endl;
+    std::cout << "1. By Department" << std::endl
+              << "2. By Merchant" << std::endl
+              << "3. By Time (Month)" << std::endl
+              << "4. TOP 10 Personal Consumption Ranking" << std::endl;
+    std::cin >> choice;
+
+    if (choice == "1")
+        type = "department";
+    else if (choice == "2")
+        type = "merchant";
+    else if (choice == "3")
+        type = "time";
+    else if (choice == "4")
+        type = "ranking";
+    else {
+        std::cout << OutputType::ERROR << "Invalid choice. Please select between 1 - 4." << OutputType::RESET << std::endl;
+        return;
+    }
+
+    client.send_msg(std::format(Action::GENERATE_STATISTICS.data(), type));
+
+    const auto start_msg = client.receive_msg();
+    if (start_msg["status"] == MsgStatus::FAILED) {
+        std::cout << OutputType::ERROR << "Query failed: " << start_msg["message"] << OutputType::RESET << std::endl;
+        return;
+    }
+
+    std::cout << ((type == "ranking") ? "TOP 10 Personal Consumption Ranking:" : std::format("Statistics by {}:", type)) << std::endl;
+    std::cout << OutputType::THEME << std::format(" {:>15} | {:>11} | {:>5}", "Category", "Consumption", "Count") << OutputType::RESET << std::endl;
+    for (auto data_msg = client.receive_msg(); data_msg["message"] != "END"; data_msg = client.receive_msg())
+        std::cout << std::format(" {:>15} | {:>11} | {:>5}", data_msg["category"], data_msg["consumption"], data_msg["count"]) << std::endl;
 }
