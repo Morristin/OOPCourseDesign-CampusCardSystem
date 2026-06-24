@@ -9,16 +9,16 @@
 
 class Client {
 private:
-    static constexpr auto SIN_FAMILY = AF_INET;
+    static constexpr auto SIN_FAMILY  = AF_INET;
     static constexpr auto SOCKET_TYPE = SOCK_STREAM;
 
     static constexpr auto SERVER_ADDR = "127.0.0.1";
     static constexpr auto SERVER_PORT = 8080;
 
     std::string address = SERVER_ADDR;
-    int port = htons(SERVER_PORT);
+    int port            = htons(SERVER_PORT);
 
-    int client = socket(SIN_FAMILY, SOCKET_TYPE, 0);
+    int client    = socket(SIN_FAMILY, SOCKET_TYPE, 0);
     Stream stream = Stream(client);
 
 public:

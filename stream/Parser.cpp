@@ -2,7 +2,7 @@
 
 void Parser::store_item(const std::string& item)
 {
-    const auto colon_pos = item.find(':');
+    const auto colon_pos            = item.find(':');
     data[item.substr(0, colon_pos)] = item.substr(colon_pos + 1);
 }
 

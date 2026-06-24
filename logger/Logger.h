@@ -7,12 +7,12 @@
 
 class Logger {
 private:
-    static constexpr std::string log_name = LOG_FILE;
-    std::string module_name;
-
     static std::mutex log_mutex;
+
+    static constexpr std::string log_filename = LOG_FILE;
     std::ofstream log_file;
 
+    std::string module_name;
     void write(const std::string& level, const std::string& message);
 
 public:

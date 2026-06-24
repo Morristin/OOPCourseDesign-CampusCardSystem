@@ -1,0 +1,5 @@
+BasedOnStyle: WebKit
+BreakConstructorInitializers: BeforeColon
+
+AlignConsecutiveAssignments:
+  Enabled: true

@@ -54,9 +54,9 @@ Server::Server()
     setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &ALLOW_PORT_REUSE, sizeof(ALLOW_PORT_REUSE));
 
     sockaddr_in server_addr { };
-    server_addr.sin_family = SIN_FAMILY;
+    server_addr.sin_family      = SIN_FAMILY;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(DEFAULT_PORT);
+    server_addr.sin_port        = htons(DEFAULT_PORT);
 
     std::signal(SIGPIPE, SIG_IGN); // To prevent server exit when pipe broken.
 
@@ -74,10 +74,10 @@ Server::Server()
     while (true) {
         sockaddr_in client_addr { };
         socklen_t client_addr_len = sizeof(client_addr);
-        const int client = accept(server, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
+        const int client          = accept(server, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
 
         std::thread([client, this]() {
-            auto stream = Stream(client);
+            auto stream        = Stream(client);
             auto client_logger = Logger(std::format("Client {}", client));
             Session session { stream, client_logger, "", Permission::DEFAULT, Parser("") };
 
@@ -129,7 +129,7 @@ void Server::handle_login(Session& session)
             throw DatabaseException(ErrorMsg::PASSWORD_WRONG);
 
         // Update the username and permission in the session.
-        session.username = username;
+        session.username   = username;
         session.permission = std::stoi(std::string(user_info["permission"]));
 
         // Generate and send message to client.
@@ -151,7 +151,7 @@ void Server::handle_create_operator(const Session& session)
 {
     const auto username = session.message["username"];
     const auto password = session.message["password"];
-    const auto err = execute_and_response(session, [&] { database.create_account(username, password, Permission::OPERATOR);
+    const auto err      = execute_and_response(session, [&] { database.create_account(username, password, Permission::OPERATOR);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });
 
     if (err == ErrorMsg::USER_EXISTS)
@@ -161,7 +161,7 @@ void Server::handle_create_operator(const Session& session)
 void Server::handle_delete_operator(const Session& session)
 {
     const auto username = session.message["username"];
-    const auto err = execute_and_response(session, [&] { database.delete_operator(username);
+    const auto err      = execute_and_response(session, [&] { database.delete_operator(username);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });
 
     if (err == ErrorMsg::USER_NOT_FOUND)
@@ -170,8 +170,8 @@ void Server::handle_delete_operator(const Session& session)
 
 void Server::handle_create_student(const Session& session)
 {
-    const std::string real_name = session.message["real_name"];
-    const std::string gender = session.message["gender"];
+    const std::string real_name  = session.message["real_name"];
+    const std::string gender     = session.message["gender"];
     const std::string student_id = session.message["student_id"];
     const std::string department = session.message["department"];
 
@@ -182,14 +182,14 @@ void Server::handle_create_student(const Session& session)
 void Server::handle_delete_student(const Session& session)
 {
     const std::string student_id = session.message["student_id"];
-    const auto err = execute_and_response(session, [&] { database.delete_student(student_id);
+    const auto err               = execute_and_response(session, [&] { database.delete_student(student_id);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });
 }
 
 void Server::handle_update_student_status(const Session& session)
 {
     const std::string username = session.message["username"];
-    const int new_status = std::stoi(session.message["status"]);
+    const int new_status       = std::stoi(session.message["status"]);
 
     const auto err = execute_and_response(session, [&] { database.update_account_status(username, new_status);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });
@@ -198,8 +198,8 @@ void Server::handle_update_student_status(const Session& session)
 void Server::handle_update_student_userinfo(const Session& session)
 {
     const std::string student_id = session.message["student_id"];
-    const std::string real_name = session.message["real_name"];
-    const std::string gender = session.message["gender"];
+    const std::string real_name  = session.message["real_name"];
+    const std::string gender     = session.message["gender"];
     const std::string department = session.message["department"];
 
     const auto err = execute_and_response(session, [&] { database.update_student(student_id, real_name, gender, department);
@@ -209,7 +209,7 @@ void Server::handle_update_student_userinfo(const Session& session)
 void Server::handle_recharge(const Session& session)
 {
     const std::string card_number = session.message["card_number"];
-    const double amount = std::stod(session.message["amount"]);
+    const double amount           = std::stod(session.message["amount"]);
 
     const auto err = execute_and_response(session, [&] { database.recharge_card(card_number, amount, session.username);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });
@@ -218,8 +218,8 @@ void Server::handle_recharge(const Session& session)
 void Server::handle_consume(const Session& session)
 {
     const std::string card_number = session.message["card_number"];
-    const double amount = std::stod(session.message["amount"]);
-    const std::string merchant = session.message["merchant"];
+    const double amount           = std::stod(session.message["amount"]);
+    const std::string merchant    = session.message["merchant"];
 
     const auto err = execute_and_response(session, [&] { database.consume_card(card_number, amount, merchant);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });

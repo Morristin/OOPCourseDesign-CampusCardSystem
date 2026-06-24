@@ -23,7 +23,7 @@ public:
     {
         for (const auto& menu_item : menu_items) {
             if (std::holds_alternative<Dashboard*>(menu_item.value)) {
-                const auto sub_dashboard = std::get<Dashboard*>(menu_item.value);
+                const auto sub_dashboard           = std::get<Dashboard*>(menu_item.value);
                 sub_dashboard->previous_dashboard_ = this;
             }
             menu_.push_back(menu_item);

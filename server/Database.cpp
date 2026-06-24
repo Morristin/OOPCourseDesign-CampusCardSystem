@@ -16,18 +16,18 @@ Database::Database(const std::string& database_path)
 
 void Database::initialize() const
 {
-    constexpr auto SQL_CREATE_TABLE_USERS = "CREATE TABLE IF NOT EXISTS Users ("
-                                            "Username TEXT PRIMARY KEY, "
-                                            "Password TEXT NOT NULL, "
-                                            "Permission INTEGER NOT NULL, "
-                                            "Status INTEGER NOT NULL, "
-                                            "CardNumber TEXT NOT NULL );";
-    constexpr auto SQL_CREATE_TABLE_USERINFO = "CREATE TABLE IF NOT EXISTS UserInfo ("
-                                               "Username TEXT PRIMARY KEY, "
-                                               "RealName TEXT NOT NULL, "
-                                               "Gender TEXT NOT NULL, "
-                                               "StudentID TEXT NOT NULL UNIQUE, "
-                                               "Department TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_USERS        = "CREATE TABLE IF NOT EXISTS Users ("
+                                                   "Username TEXT PRIMARY KEY, "
+                                                   "Password TEXT NOT NULL, "
+                                                   "Permission INTEGER NOT NULL, "
+                                                   "Status INTEGER NOT NULL, "
+                                                   "CardNumber TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_USERINFO     = "CREATE TABLE IF NOT EXISTS UserInfo ("
+                                                   "Username TEXT PRIMARY KEY, "
+                                                   "RealName TEXT NOT NULL, "
+                                                   "Gender TEXT NOT NULL, "
+                                                   "StudentID TEXT NOT NULL UNIQUE, "
+                                                   "Department TEXT NOT NULL );";
     constexpr auto SQL_CREATE_TABLE_TRANSACTIONS = "CREATE TABLE IF NOT EXISTS Transactions ("
                                                    "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
                                                    "CardNumber TEXT NOT NULL,"
@@ -52,9 +52,9 @@ std::string Database::query_account(const std::string& username)
     if (sqlite3_step(cursor) != SQLITE_ROW)
         throw DatabaseException(ErrorMsg::USER_NOT_FOUND);
 
-    std::string password = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
-    std::string permission = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
-    std::string status = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 2));
+    std::string password    = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+    std::string permission  = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
+    std::string status      = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 2));
     std::string card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
 
     return std::format(DB_USER_INFO, password, permission, status, card_number);
@@ -108,7 +108,7 @@ std::vector<std::string> Database::query_abnormal_accounts()
     sqlite3_bind_int(cursor, 1, UserStatus::NORMAL);
 
     while (sqlite3_step(cursor) == SQLITE_ROW) {
-        std::string username = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        std::string username    = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
         std::string card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1));
         const int origin_status = sqlite3_column_int(cursor, 2);
 
@@ -223,7 +223,7 @@ void Database::recharge_card(const std::string& card_number, double amount, cons
         throw DatabaseException(ErrorMsg::ACCOUNT_ABNORMAL);
 
     // Get current balance from table Transactions. If there is no record in Transactions, use default value 0.
-    double old_balance = 0.0;
+    double old_balance     = 0.0;
     constexpr auto SQL_GET = "SELECT Balance FROM Transactions WHERE CardNumber = ? ORDER BY ID DESC LIMIT 1";
     sqlite3_prepare_v2(database, SQL_GET, -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
@@ -232,7 +232,7 @@ void Database::recharge_card(const std::string& card_number, double amount, cons
         old_balance = sqlite3_column_double(cursor, 0);
 
     // Calculate new balance and insert recharge record into Transactions.
-    const double new_balance = old_balance + amount;
+    const double new_balance  = old_balance + amount;
     constexpr auto SQL_INSERT = "INSERT INTO Transactions (CardNumber, Amount, Balance, TransactionTime, Operator) "
                                 "VALUES (?, ?, ?, datetime('now', 'localtime'), ?)";
     sqlite3_prepare_v2(database, SQL_INSERT, -1, &cursor, nullptr);
@@ -287,10 +287,10 @@ std::vector<std::string> Database::query_transactions(const std::string& card_nu
 
     std::vector<std::string> records;
     while (sqlite3_step(cursor) == SQLITE_ROW) {
-        auto time = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
-        auto amount = sqlite3_column_double(cursor, 1);
+        auto time    = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        auto amount  = sqlite3_column_double(cursor, 1);
         auto balance = sqlite3_column_double(cursor, 2);
-        auto op = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
+        auto op      = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
 
         records.emplace_back(std::format(DB_TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), op));
     }
@@ -311,8 +311,8 @@ std::vector<std::string> Database::query_merchant_transactions(const std::string
     std::vector<std::string> records;
     while (sqlite3_step(cursor) == SQLITE_ROW) {
         std::string time = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
-        double amount = sqlite3_column_double(cursor, 1);
-        double balance = sqlite3_column_double(cursor, 2);
+        double amount    = sqlite3_column_double(cursor, 1);
+        double balance   = sqlite3_column_double(cursor, 2);
 
         records.emplace_back(std::format(DB_TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), merchant));
     }
@@ -330,9 +330,9 @@ std::vector<std::string> Database::export_transactions()
 
     while (sqlite3_step(cursor) == SQLITE_ROW) {
         std::string time = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
-        double amount = sqlite3_column_double(cursor, 1);
-        double balance = sqlite3_column_double(cursor, 2);
-        std::string op = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
+        double amount    = sqlite3_column_double(cursor, 1);
+        double balance   = sqlite3_column_double(cursor, 2);
+        std::string op   = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 3));
 
         records.emplace_back(std::format(DB_TRANSACTION_RECORD, time, std::format("{:.2f}", amount), std::format("{:.2f}", balance), op));
     }
@@ -349,20 +349,20 @@ std::vector<std::string> Database::generate_statistics(const std::string& type)
                                                 "FROM Transactions JOIN Users ON Transactions.CardNumber = Users.CardNumber JOIN UserInfo ON Users.Username = UserInfo.Username "
                                                 "WHERE Transactions.Amount < 0 "
                                                 "GROUP BY UserInfo.Department";
-    constexpr std::string_view merchant_SQL = "SELECT Transactions.Operator, SUM(ABS(Transactions.Amount)), COUNT(Transactions.ID) "
-                                              "FROM Transactions "
-                                              "WHERE Transactions.Amount < 0 "
-                                              "GROUP BY Transactions.Operator";
-    constexpr std::string_view time_SQL = "SELECT strftime('%Y-%m', Transactions.TransactionTime), SUM(Transactions.Amount), COUNT(Transactions.ID) "
-                                          "FROM Transactions "
-                                          "WHERE Transactions.Amount < 0 "
-                                          "GROUP BY strftime('%Y-%m', Transactions.TransactionTime)";
-    constexpr std::string_view ranking_SQL = "SELECT UserInfo.RealName, SUM(ABS(Transactions.Amount)), COUNT(Transactions.ID) "
-                                             "FROM Transactions JOIN Users ON Transactions.CardNumber = Users.CardNumber JOIN UserInfo ON Users.Username = UserInfo.Username "
-                                             "WHERE Transactions.Amount < 0 "
-                                             "GROUP BY Users.Username "
-                                             "ORDER BY SUM(ABS(Transactions.Amount)) DESC "
-                                             "LIMIT 10";
+    constexpr std::string_view merchant_SQL   = "SELECT Transactions.Operator, SUM(ABS(Transactions.Amount)), COUNT(Transactions.ID) "
+                                                "FROM Transactions "
+                                                "WHERE Transactions.Amount < 0 "
+                                                "GROUP BY Transactions.Operator";
+    constexpr std::string_view time_SQL       = "SELECT strftime('%Y-%m', Transactions.TransactionTime), SUM(Transactions.Amount), COUNT(Transactions.ID) "
+                                                "FROM Transactions "
+                                                "WHERE Transactions.Amount < 0 "
+                                                "GROUP BY strftime('%Y-%m', Transactions.TransactionTime)";
+    constexpr std::string_view ranking_SQL    = "SELECT UserInfo.RealName, SUM(ABS(Transactions.Amount)), COUNT(Transactions.ID) "
+                                                "FROM Transactions JOIN Users ON Transactions.CardNumber = Users.CardNumber JOIN UserInfo ON Users.Username = UserInfo.Username "
+                                                "WHERE Transactions.Amount < 0 "
+                                                "GROUP BY Users.Username "
+                                                "ORDER BY SUM(ABS(Transactions.Amount)) DESC "
+                                                "LIMIT 10";
 
     if (type == "department")
         sql = department_SQL;
@@ -377,8 +377,8 @@ std::vector<std::string> Database::generate_statistics(const std::string& type)
 
     while (sqlite3_step(cursor) == SQLITE_ROW) {
         std::string category = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
-        double consumption = sqlite3_column_double(cursor, 1);
-        int count = sqlite3_column_int(cursor, 2);
+        double consumption   = sqlite3_column_double(cursor, 1);
+        int count            = sqlite3_column_int(cursor, 2);
         records.emplace_back(std::format(DB_TRANSACTION_STATISTICS, category, std::format("{:.2f}", consumption), count));
     }
 
