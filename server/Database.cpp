@@ -8,6 +8,17 @@ std::mutex Database::database_mutex;
 
 Database::Database(const std::string& database_path)
 {
+    if (const std::filesystem::path path(database_path);
+        path.has_parent_path() && !std::filesystem::exists(path.parent_path())) {
+        try {
+            std::filesystem::create_directories(path.parent_path());
+        } catch (const std::filesystem::filesystem_error& err) {
+            logger.critical(std::format("Failed to create database directory: {}.", err.what()));
+        }
+    }
+
+    sqlite3_open_v2(database_path.c_str(), &database, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
     if (const int status = sqlite3_open(database_path.c_str(), &database); status != SQLITE_OK)
         logger.critical(std::format("Can not connect to database: {}", database_path));
     else
