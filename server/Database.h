@@ -29,6 +29,7 @@ public:
     ~Database() { sqlite3_close(database); }
 
     void initialize() const;
+    void check_and_deduct_fixed_fee();
 
     std::string query_account(const std::string& username);
     void create_account(const std::string& username, const std::string& password, int permission);

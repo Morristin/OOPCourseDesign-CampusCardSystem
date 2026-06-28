@@ -39,6 +39,81 @@ void Database::initialize() const
     sqlite3_exec(database, SQL_CREATE_TABLE_USERS, nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_USERINFO, nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_TRANSACTIONS, nullptr, nullptr, nullptr);
+
+    constexpr auto SQL_CREATE_TABLE_SYSTEM_SETTINGS = "CREATE TABLE IF NOT EXISTS SystemSettings ("
+                                                      "Key TEXT PRIMARY KEY, "
+                                                      "Value REAL NOT NULL);";
+    constexpr auto SQL_INIT_TABLE_SYSTEM_SETTINGS   = "INSERT OR IGNORE INTO SystemSettings (Key, Value) "
+                                                      "VALUES ('FIXED_FEE', 0.0)";
+
+    sqlite3_exec(database, SQL_CREATE_TABLE_SYSTEM_SETTINGS, nullptr, nullptr, nullptr);
+    sqlite3_exec(database, SQL_INIT_TABLE_SYSTEM_SETTINGS, nullptr, nullptr, nullptr);
+}
+
+void Database::check_and_deduct_fixed_fee()
+{
+    std::lock_guard lock(database_mutex);
+
+    // Check the last deduction time. If the data doesn't match requirment, just return.
+    constexpr auto FIXED_FEE_OPERATOR            = "SYSTEM_FEE";
+    constexpr auto SQL_CHECK_LAST_DEDUCTION_TIME = "SELECT COUNT(*) FROM Transactions WHERE Transactions.Operator = ? AND TransactionTime > datetime('now', '-180 days')";
+
+    sqlite3_prepare_v2(database, SQL_CHECK_LAST_DEDUCTION_TIME, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, FIXED_FEE_OPERATOR, -1, SQLITE_STATIC);
+
+    if (sqlite3_step(cursor); sqlite3_column_int(cursor, 0) != 0)
+        return;
+
+    // If the deduction never happened, do dudect at 3.1, 6.1, 9.1 and 12.1.
+    // Detect date from database instead of server.
+    constexpr auto SQL_CHECK_DEDUCTION_EVER_HAPPENED = "SELECT COUNT(*) FROM Transactions WHERE Operator = ?";
+
+    sqlite3_prepare_v2(database, SQL_CHECK_DEDUCTION_EVER_HAPPENED, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, FIXED_FEE_OPERATOR, -1, SQLITE_STATIC);
+
+    sqlite3_prepare_v2(database, "SELECT strftime('%m-%d', 'now')", -1, &cursor, nullptr);
+    sqlite3_step(cursor);
+
+    if (const std::string today = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        today != "03-01" && today != "06-01" && today != "09-01" && today != "12-01")
+        return;
+
+    // Get all card for deducting fixed fee from table Users.
+    std::vector<std::string> card_numbers;
+
+    constexpr auto SQL_GET_ALL_CARDNUMBER = "SELECT Users.CardNumber FROM Users "
+                                            "WHERE Users.Status = ? AND Users.CardNumber IS NOT NULL";
+
+    sqlite3_prepare_v2(database, SQL_GET_ALL_CARDNUMBER, -1, &cursor, nullptr);
+    sqlite3_bind_int(cursor, 1, UserStatus::NORMAL);
+
+    while (sqlite3_step(cursor) == SQLITE_ROW) {
+        auto card_number = reinterpret_cast<const char*>(sqlite3_column_text(cursor, 0));
+        card_numbers.emplace_back(card_number);
+    }
+
+    // Get the fixed fee from table System Settings
+    double fixed_fee = 0.0;
+
+    sqlite3_prepare_v2(database, "SELECT Value FROM SystemSettings WHERE Key = 'SEMESTER_FEE'", -1, &cursor, nullptr);
+    if (sqlite3_step(cursor) == SQLITE_ROW)
+        fixed_fee = sqlite3_column_double(cursor, 1);
+    else
+        logger.error("Cannot detect FIXED_FEE from table SystemSettings.");
+
+    // Do every change in transaction and commit in the end.
+    sqlite3_exec(database, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+
+    for (const auto& card_number : card_numbers) {
+        try {
+            consume_card(card_number, fixed_fee, "FIXED_FEE");
+        } catch (const DatabaseException& err) {
+            logger.warning(std::format("Failed to deduct fixed fee for card {}: {}", card_number, err.what()));
+        }
+    }
+
+    sqlite3_exec(database, "COMMIT", nullptr, nullptr, nullptr);
+    logger.info(std::format("Successfully deducted semester fee from {} accounts.", card_numbers.size()));
 }
 
 std::string Database::query_account(const std::string& username)

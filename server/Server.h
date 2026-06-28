@@ -33,7 +33,7 @@ private:
     // Database Connector
     Database database = Database();
 
-    // Route Struct & Route Map
+    // Route & Background Tasks
     struct Route {
         int permission_requirement;
         std::function<void(Session&)> handler;
@@ -59,6 +59,10 @@ private:
         { "query_merchant", { Permission::OPERATOR, [this](Session& s) { handle_query_merchant(s); } } },
         { "export_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_export_transactions(s); } } },
         { "generate_statistics", { Permission::OPERATOR, [this](const Session& s) { handle_generate_statistics(s); } } }
+    };
+
+    std::vector<std::function<void()>> background_tasks = {
+        [this] { database.check_and_deduct_fixed_fee(); }
     };
 
 public:

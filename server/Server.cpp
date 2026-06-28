@@ -95,6 +95,9 @@ Server::Server()
 
                     const std::string action = session.message["action"];
 
+                    for (const auto& background_task : background_tasks)
+                        background_task();
+
                     if (auto route = routes.find(action); route == routes.end()) {
                         stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::UNKNOWN_ACTION));
                         session.logger.error(std::format("Received an unknown action: {}", action));
