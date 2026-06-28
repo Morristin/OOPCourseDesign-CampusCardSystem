@@ -16,38 +16,45 @@ Database::Database(const std::string& database_path)
 
 void Database::initialize() const
 {
-    constexpr auto SQL_CREATE_TABLE_USERS        = "CREATE TABLE IF NOT EXISTS Users ("
-                                                   "Username TEXT PRIMARY KEY, "
-                                                   "Password TEXT NOT NULL, "
-                                                   "Permission INTEGER NOT NULL, "
-                                                   "Status INTEGER NOT NULL, "
-                                                   "CardNumber TEXT NOT NULL );";
-    constexpr auto SQL_CREATE_TABLE_USERINFO     = "CREATE TABLE IF NOT EXISTS UserInfo ("
-                                                   "Username TEXT PRIMARY KEY, "
-                                                   "RealName TEXT NOT NULL, "
-                                                   "Gender TEXT NOT NULL, "
-                                                   "StudentID TEXT NOT NULL UNIQUE, "
-                                                   "Department TEXT NOT NULL );";
-    constexpr auto SQL_CREATE_TABLE_TRANSACTIONS = "CREATE TABLE IF NOT EXISTS Transactions ("
-                                                   "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-                                                   "CardNumber TEXT NOT NULL,"
-                                                   "Amount REAL NOT NULL, "
-                                                   "Balance REAL NOT NULL, "
-                                                   "TransactionTime TEXT NOT NULL,"
-                                                   "Operator TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_USERS           = "CREATE TABLE IF NOT EXISTS Users ("
+                                                      "Username TEXT PRIMARY KEY, "
+                                                      "Password TEXT NOT NULL, "
+                                                      "Permission INTEGER NOT NULL, "
+                                                      "Status INTEGER NOT NULL, "
+                                                      "CardNumber TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_USERINFO        = "CREATE TABLE IF NOT EXISTS UserInfo ("
+                                                      "Username TEXT PRIMARY KEY, "
+                                                      "RealName TEXT NOT NULL, "
+                                                      "Gender TEXT NOT NULL, "
+                                                      "StudentID TEXT NOT NULL UNIQUE, "
+                                                      "Department TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_TRANSACTIONS    = "CREATE TABLE IF NOT EXISTS Transactions ("
+                                                      "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                                      "CardNumber TEXT NOT NULL,"
+                                                      "Amount REAL NOT NULL, "
+                                                      "Balance REAL NOT NULL, "
+                                                      "TransactionTime TEXT NOT NULL,"
+                                                      "Operator TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_SYSTEM_SETTINGS = "CREATE TABLE IF NOT EXISTS SystemSettings ("
+                                                      "Key TEXT PRIMARY KEY, "
+                                                      "Value TEXT NOT NULL);";
 
     sqlite3_exec(database, SQL_CREATE_TABLE_USERS, nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_USERINFO, nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_TRANSACTIONS, nullptr, nullptr, nullptr);
-
-    constexpr auto SQL_CREATE_TABLE_SYSTEM_SETTINGS = "CREATE TABLE IF NOT EXISTS SystemSettings ("
-                                                      "Key TEXT PRIMARY KEY, "
-                                                      "Value REAL NOT NULL);";
-    constexpr auto SQL_INIT_TABLE_SYSTEM_SETTINGS   = "INSERT OR IGNORE INTO SystemSettings (Key, Value) "
-                                                      "VALUES ('FIXED_FEE', 0.0)";
-
     sqlite3_exec(database, SQL_CREATE_TABLE_SYSTEM_SETTINGS, nullptr, nullptr, nullptr);
-    sqlite3_exec(database, SQL_INIT_TABLE_SYSTEM_SETTINGS, nullptr, nullptr, nullptr);
+
+    constexpr auto SQL_INIT_TABLE_SYSTEM_SETTINGS = "INSERT OR IGNORE INTO SystemSettings (Key, Value) VALUES ({}, '0.0')";
+    sqlite3_exec(database, std::format(SQL_INIT_TABLE_SYSTEM_SETTINGS, SystemSettings::FIXED_FEE).c_str(), nullptr, nullptr, nullptr);
+}
+
+void Database::update_system_setting(const std::string& key, const std::string& value)
+{
+    constexpr auto SQL_UPDATE_TABLE_SYSTEM_SETTINGS = "INSERT OR REPLACE INTO SystemSettings (Key, Value) VALUES (?, ?)";
+    sqlite3_prepare_v2(database, SQL_UPDATE_TABLE_SYSTEM_SETTINGS, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, key.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 2, value.c_str(), -1, SQLITE_STATIC);
+    sqlite3_step(cursor);
 }
 
 void Database::check_and_deduct_fixed_fee()
@@ -95,9 +102,11 @@ void Database::check_and_deduct_fixed_fee()
     // Get the fixed fee from table System Settings
     double fixed_fee = 0.0;
 
-    sqlite3_prepare_v2(database, "SELECT Value FROM SystemSettings WHERE Key = 'SEMESTER_FEE'", -1, &cursor, nullptr);
+    sqlite3_prepare_v2(database, "SELECT Value FROM SystemSettings WHERE Key = ?", -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, SystemSettings::FIXED_FEE.data(), -1, SQLITE_STATIC);
+
     if (sqlite3_step(cursor) == SQLITE_ROW)
-        fixed_fee = sqlite3_column_double(cursor, 1);
+        fixed_fee = std::stod(reinterpret_cast<const char*>(sqlite3_column_text(cursor, 1)));
     else
         logger.error("Cannot detect FIXED_FEE from table SystemSettings.");
 
@@ -106,7 +115,7 @@ void Database::check_and_deduct_fixed_fee()
 
     for (const auto& card_number : card_numbers) {
         try {
-            consume_card(card_number, fixed_fee, "FIXED_FEE");
+            consume_card(card_number, fixed_fee, SystemSettings::FIXED_FEE.data());
         } catch (const DatabaseException& err) {
             logger.warning(std::format("Failed to deduct fixed fee for card {}: {}", card_number, err.what()));
         }
@@ -146,7 +155,7 @@ void Database::create_account(const std::string& username, const std::string& pa
     sqlite3_bind_text(cursor, 2, password.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_int(cursor, 3, permission);
     sqlite3_bind_int(cursor, 4, UserStatus::NORMAL);
-    sqlite3_bind_text(cursor, 5, CardNumber::BLANK.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 5, CardNumber::BLANK.data(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(cursor) != SQLITE_DONE)
         throw DatabaseException(ErrorMsg::USER_EXISTS);

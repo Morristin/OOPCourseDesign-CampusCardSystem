@@ -70,8 +70,11 @@ protected:
         MenuItem("Manage Student Information", "Create, modify or delete student account.", &student_management_dashboard),
         MenuItem("Manage Student Accounts", "Freeze, delete or restore student account.", [this] { update_student_status(); }),
         MenuItem("Recharge", "Recharge money into a card.", [this] { recharge_card(); }),
+        MenuItem("Set fixed fee", "set the value of fixed fee.", [this] { update_fixed_fee(); }),
         MenuItem("Manage Transactions", "Query or export transactions", &transaction_management_dashboard)
     };
+
+    void update_fixed_fee() const;
 
     void create_student() const;
     void create_multiple_student() const;

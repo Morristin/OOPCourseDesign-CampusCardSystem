@@ -140,6 +140,15 @@ void Server::handle_login(Session& session)
     });
 }
 
+void Server::handle_update_system_settings(const Session& session)
+{
+    const std::string key   = session.message["key"];
+    const std::string value = session.message["value"];
+
+    execute_and_response(session, [&] {database.update_system_setting(key, value);
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });
+}
+
 void Server::handle_export_server_logs(const Session& session)
 {
     const auto logs = Logger::to_vector();

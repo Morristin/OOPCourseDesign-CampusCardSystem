@@ -8,6 +8,25 @@
 #include <iostream>
 #include <map>
 
+void Operator::update_fixed_fee() const
+{
+    std::string new_fixed_fee;
+    std::cout << "Please enter the new semester fee amount: " << std::endl;
+    std::cin >> new_fixed_fee;
+
+    try {
+        client.send_msg(std::format(Action::UPDATE_SYSTEM_SETTINGS, SystemSettings::FIXED_FEE, std::format("{:.2f}", std::stod(new_fixed_fee))));
+    } catch (const std::exception&) {
+        std::cout << OutputType::ERROR << "Please input a valid money value." << OutputType::RESET << std::endl;
+        return;
+    }
+
+    if (const auto response = client.receive_msg(); response["status"] == MsgStatus::SUCCESS)
+        std::cout << OutputType::SUCCESS << "Fixed fee updated successfully." << OutputType::RESET << std::endl;
+    else
+        std::cout << OutputType::ERROR << "Failed to update fixed fee: " << response["message"] << OutputType::RESET << std::endl;
+}
+
 void Operator::create_student() const
 {
     std::string real_name, gender, student_id, department;

@@ -41,6 +41,7 @@ private:
 
     std::unordered_map<std::string_view, Route> routes {
         { "login", { 0, [this](Session& s) { handle_login(s); } } },
+        { "update_system_settings", { Permission::OPERATOR, [this](const Session& s) { handle_update_system_settings(s); } } },
         { "export_server_logs", { Permission::SUPEROPERATOR, [](const Session& s) { handle_export_server_logs(s); } } },
 
         { "create_operator", { Permission::SUPEROPERATOR, [this](const Session& s) { handle_create_operator(s); } } },
@@ -71,6 +72,7 @@ public:
 
     [[noreturn]] void start();
     void handle_login(Session& session);
+    void handle_update_system_settings(const Session& session);
     static void handle_export_server_logs(const Session& session);
 
     void handle_create_operator(const Session& session);

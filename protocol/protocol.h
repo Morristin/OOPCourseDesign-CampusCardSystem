@@ -49,7 +49,11 @@ constexpr int FROZEN  = 6;
 }
 
 namespace CardNumber {
-constexpr std::string BLANK = "NULL";
+constexpr std::string_view BLANK = "NULL";
+}
+
+namespace SystemSettings {
+constexpr std::string_view FIXED_FEE = "FIXED_FEE";
 }
 
 constexpr std::string_view LONG_MSG_START = "status:{},message:START,length:{}";
@@ -59,8 +63,9 @@ constexpr std::string_view STATUS_WITH_MSG = "status:{},message:{}";
 constexpr std::string_view LOGIN_RESULT    = "status:{},username:{},permission:{},user_status:{},card_number:{}";
 
 namespace Action {
-constexpr std::string_view LOGIN              = "action:login,username:{},password:{}";
-constexpr std::string_view EXPORT_SERVER_LOGS = "action:export_server_logs";
+constexpr std::string_view LOGIN                  = "action:login,username:{},password:{}";
+constexpr std::string_view UPDATE_SYSTEM_SETTINGS = "action:update_system_settings,key:{},value:{}";
+constexpr std::string_view EXPORT_SERVER_LOGS     = "action:export_server_logs";
 
 constexpr std::string_view CREATE_OPERATOR = "action:create_operator,username:{},password:{}";
 constexpr std::string_view DELETE_OPERATOR = "action:delete_operator,username:{}";
