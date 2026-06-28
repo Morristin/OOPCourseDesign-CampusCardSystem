@@ -69,56 +69,54 @@ Server::Server()
     std::cout << OutputType::THEME << std::format("Server is started. Listen on port {}.", server_addr.sin_port) << OutputType::RESET << std::endl;
 }
 
-[[noreturn]] void Server::start()
+void Server::run()
 {
-    while (true) {
-        sockaddr_in client_addr { };
-        socklen_t client_addr_len = sizeof(client_addr);
-        const int client          = accept(server, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
+    sockaddr_in client_addr { };
+    socklen_t client_addr_len = sizeof(client_addr);
+    const int client          = accept(server, reinterpret_cast<struct sockaddr*>(&client_addr), &client_addr_len);
 
-        std::thread([client, this]() {
-            auto stream        = Stream(client);
-            auto client_logger = Logger(std::format("Client {}", client));
-            Session session { stream, client_logger, "", Permission::DEFAULT, Parser("") };
+    std::thread([client, this] {
+        auto stream        = Stream(client);
+        auto client_logger = Logger(std::format("Client {}", client));
+        Session session { stream, client_logger, "", Permission::DEFAULT, Parser("") };
 
-            session.logger.info(std::format("Successfully connected client {}", client));
-            std::cout << OutputType::THEME << std::format("Client {} connected.", client) << OutputType::RESET << std::endl;
+        session.logger.info(std::format("Successfully connected client {}", client));
+        std::cout << OutputType::THEME << std::format("Client {} connected.", client) << OutputType::RESET << std::endl;
 
-            try {
-                while (true) {
-                    session.message = stream.receive_msg();
-                    if (session.message["status"] == MsgStatus::FAILED && session.message["message"] == ErrorMsg::NETWORK_ERROR) {
-                        session.logger.info("Client disconnected.");
-                        std::cout << OutputType::SUCCESS << std::format("Client {} disconnected.", client) << OutputType::RESET << std::endl;
-                        break;
-                    }
-
-                    const std::string action = session.message["action"];
-
-                    for (const auto& background_task : background_tasks)
-                        background_task();
-
-                    if (auto route = routes.find(action); route == routes.end()) {
-                        stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::UNKNOWN_ACTION));
-                        session.logger.error(std::format("Received an unknown action: {}", action));
-                    }
-
-                    else if (session.permission >= route->second.permission_requirement)
-                        route->second.handler(session);
-
-                    else {
-                        stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::PERMISSION_DENIED));
-                        session.logger.warning(std::format("Permission denied: {} require {}. Current permission: {}.", action, route->second.permission_requirement, session.permission));
-                    }
+        try {
+            while (true) {
+                session.message = stream.receive_msg();
+                if (session.message["status"] == MsgStatus::FAILED && session.message["message"] == ErrorMsg::NETWORK_ERROR) {
+                    session.logger.info("Client disconnected.");
+                    std::cout << OutputType::SUCCESS << std::format("Client {} disconnected.", client) << OutputType::RESET << std::endl;
+                    break;
                 }
-            } catch (const std::exception& err) {
-                session.logger.warning(std::format("Client handling error: {}", err.what()));
-                std::cout << OutputType::WARNING << std::format("Client {} disconnected as an error happened.", client) << OutputType::RESET << std::endl;
-            }
 
-            close(client);
-        }).detach();
-    }
+                const std::string action = session.message["action"];
+
+                for (const auto& background_task : background_tasks)
+                    background_task();
+
+                if (auto route = routes.find(action); route == routes.end()) {
+                    stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::UNKNOWN_ACTION));
+                    session.logger.error(std::format("Received an unknown action: {}", action));
+                }
+
+                else if (session.permission >= route->second.permission_requirement)
+                    route->second.handler(session);
+
+                else {
+                    stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::FAILED, ErrorMsg::PERMISSION_DENIED));
+                    session.logger.warning(std::format("Permission denied: {} require {}. Current permission: {}.", action, route->second.permission_requirement, session.permission));
+                }
+            }
+        } catch (const std::exception& err) {
+            session.logger.warning(std::format("Client handling error: {}", err.what()));
+            std::cout << OutputType::WARNING << std::format("Client {} disconnected as an error happened.", client) << OutputType::RESET << std::endl;
+        }
+
+        close(client);
+    }).detach();
 }
 
 void Server::handle_login(Session& session)

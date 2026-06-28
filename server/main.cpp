@@ -1,7 +1,8 @@
 #include "Server.h"
 
-int main()
+[[noreturn]] int main()
 {
     auto server = Server();
-    server.start();
+    while (true)
+        server.run();
 }

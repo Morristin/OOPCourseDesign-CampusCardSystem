@@ -70,7 +70,8 @@ public:
     Server();
     ~Server() { close(server); }
 
-    [[noreturn]] void start();
+    void run();
+
     void handle_login(Session& session);
     void handle_update_system_settings(const Session& session);
     static void handle_export_server_logs(const Session& session);
