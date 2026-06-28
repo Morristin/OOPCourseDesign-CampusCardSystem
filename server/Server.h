@@ -54,6 +54,8 @@ private:
 
         { "recharge", { Permission::OPERATOR, [this](const Session& s) { handle_recharge(s); } } },
         { "consume", { Permission::STUDENT, [this](const Session& s) { handle_consume(s); } } },
+        { "set_consumption_limit", { Permission::STUDENT, [this](const Session& s) { handle_set_consumption_limit(s); } } },
+
         { "query_abnormal_accounts", { Permission::OPERATOR, [this](const Session& s) { handle_query_abnormal_accounts(s); } } },
         { "query_transaction", { Permission::OPERATOR, [this](const Session& s) { handle_query_transactions(s); } } },
         { "query_own_transaction", { Permission::STUDENT, [this](Session& s) { handle_query_own_transactions(s); } } },
@@ -86,6 +88,8 @@ public:
 
     void handle_recharge(const Session& session);
     void handle_consume(const Session& session);
+    void handle_set_consumption_limit(const Session& session);
+
     void handle_query_abnormal_accounts(const Session& session);
     void handle_query_transactions(const Session& session);
     void handle_query_own_transactions(Session& session);

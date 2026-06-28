@@ -4,36 +4,11 @@
 #include <format>
 #include <string_view>
 
-namespace MsgStatus {
-constexpr std::string_view SUCCESS = "success";
-constexpr std::string_view FAILED  = "failed";
-}
-
-namespace ErrorMsg {
-constexpr std::string_view NETWORK_ERROR = "NetworkError";
-
-constexpr std::string_view UNKNOWN_ACTION    = "UnknownAction";
-constexpr std::string_view PERMISSION_DENIED = "PermissionDenied";
-
-constexpr std::string_view USER_NOT_FOUND     = "UserNotFound";
-constexpr std::string_view USER_EXISTS        = "UserExists";
-constexpr std::string_view USERINFO_NOT_FOUND = "UserInfoNotFound";
-constexpr std::string_view USERINFO_EXISTS    = "UserInfoAlreadyExists";
-constexpr std::string_view CARD_NOT_FOUND     = "CardNotFound";
-
-constexpr std::string_view ACCOUNT_ABNORMAL  = "AccountAbnormal";
-constexpr std::string_view ACCOUNT_DELETED   = "AccountDeleted";
-constexpr std::string_view ACCOUNT_FROZEN    = "AccountFrozen";
-constexpr std::string_view ACCOUNT_OVERDRAWN = "AccountOverdrawn";
-
-constexpr std::string_view BALANCE_INSUFFICIENT  = "BalanceInsufficient";
-constexpr std::string_view PASSWORD_WRONG        = "PasswordWrong";
-constexpr std::string_view TARGET_NOT_STUDENT    = "TargetNotStudent";
-constexpr std::string_view TRANSACTION_NOT_FOUND = "TransactionNotFound";
-}
-
-namespace Password {
-constexpr std::string DEFAULT = "123456";
+namespace UserStatus {
+constexpr int NORMAL    = 7;
+constexpr int DELETED   = 1;
+constexpr int FROZEN    = 4;
+constexpr int OVERDRAWN = 6;
 }
 
 namespace Permission {
@@ -43,15 +18,10 @@ constexpr int OPERATOR      = 6;
 constexpr int SUPEROPERATOR = 7;
 }
 
-namespace UserStatus {
-constexpr int NORMAL    = 7;
-constexpr int DELETED   = 1;
-constexpr int FROZEN    = 4;
-constexpr int OVERDRAWN = 6;
-}
-
-namespace CardNumber {
-constexpr std::string_view BLANK = "NULL";
+namespace Default {
+constexpr std::string PASSWORD        = "123456";
+constexpr std::string_view CardNumber = "NULL";
+constexpr double ConsumptionLimit     = 0.0;
 }
 
 namespace SystemSettings {
@@ -77,8 +47,9 @@ constexpr std::string_view DELETE_STUDENT          = "action:delete_student,stud
 constexpr std::string_view UPDATE_STUDENT_STATUS   = "action:update_student_status,username:{},status:{}";
 constexpr std::string_view UPDATE_STUDENT_USERINFO = "action:update_student_userinfo,student_id:{},real_name:{},gender:{},department:{}";
 
-constexpr std::string_view RECHARGE = "action:recharge,card_number:{},amount:{}";
-constexpr std::string_view CONSUME  = "action:consume,card_number:{},amount:{},merchant:{}";
+constexpr std::string_view RECHARGE              = "action:recharge,card_number:{},amount:{}";
+constexpr std::string_view CONSUME               = "action:consume,card_number:{},amount:{},merchant:{}";
+constexpr std::string_view SET_CONSUMPTION_LIMIT = "action:set_consumption_limit,daily_limit:{},single_limit:{}";
 
 constexpr std::string_view QUERY_TRANSACTION       = "action:query_transaction,card_number:{}";
 constexpr std::string_view QUERY_OWN_TRANSACTION   = "action:query_own_transaction";
@@ -93,5 +64,36 @@ constexpr std::string_view DB_ABNORMAL_ACCOUNT       = "username:{},card_number:
 constexpr std::string_view DB_USER_INFO              = "password:{},permission:{},status:{},card_number:{}";
 constexpr std::string_view DB_TRANSACTION_STATISTICS = "category:{},consumption:{},count:{}";
 constexpr std::string_view DB_TRANSACTION_RECORD     = "time:{},amount:{},balance:{},operator:{}";
+
+namespace MsgStatus {
+constexpr std::string_view SUCCESS = "success";
+constexpr std::string_view FAILED  = "failed";
+}
+
+namespace ErrorMsg {
+constexpr std::string_view NETWORK_ERROR = "NetworkError";
+
+constexpr std::string_view UNKNOWN_ACTION    = "UnknownAction";
+constexpr std::string_view PERMISSION_DENIED = "PermissionDenied";
+
+constexpr std::string_view USER_NOT_FOUND     = "UserNotFound";
+constexpr std::string_view USER_EXISTS        = "UserExists";
+constexpr std::string_view USERINFO_NOT_FOUND = "UserInfoNotFound";
+constexpr std::string_view USERINFO_EXISTS    = "UserInfoAlreadyExists";
+constexpr std::string_view CARD_NOT_FOUND     = "CardNotFound";
+
+constexpr std::string_view ACCOUNT_ABNORMAL  = "AccountAbnormal";
+constexpr std::string_view ACCOUNT_DELETED   = "AccountDeleted";
+constexpr std::string_view ACCOUNT_FROZEN    = "AccountFrozen";
+constexpr std::string_view ACCOUNT_OVERDRAWN = "AccountOverdrawn";
+
+constexpr std::string_view BALANCE_INSUFFICIENT            = "BalanceInsufficient";
+constexpr std::string_view EXCEED_SINGLE_CONSUMPTION_LIMIT = "ExceedSingleConsumptionLimit";
+constexpr std::string_view EXCEED_DAILY_CONSUMPTION_LIMIT  = "ExceedDailyConsumptionLimit";
+
+constexpr std::string_view PASSWORD_WRONG        = "PasswordWrong";
+constexpr std::string_view TARGET_NOT_STUDENT    = "TargetNotStudent";
+constexpr std::string_view TRANSACTION_NOT_FOUND = "TransactionNotFound";
+}
 
 #endif

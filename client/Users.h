@@ -37,10 +37,12 @@ protected:
     [[nodiscard]] Dashboard main_dashboard() const override { return student_dashboard; }
     Dashboard student_dashboard = {
         MenuItem("Consume", "Consume the money with the info provided by merchant.", [this] { consume(); }),
+        MenuItem("Set Consumption Limit", "Set the limit of daily or single consumption.", [this] { set_consumption_limit(); }),
         MenuItem("Query Transactions", "Query your transaction history.", [this] { query_own_records(); })
     };
 
     void consume() const;
+    void set_consumption_limit() const;
     void query_own_records() const;
 
 public:

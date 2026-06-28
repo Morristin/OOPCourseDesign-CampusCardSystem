@@ -16,32 +16,37 @@ Database::Database(const std::string& database_path)
 
 void Database::initialize() const
 {
-    constexpr auto SQL_CREATE_TABLE_USERS           = "CREATE TABLE IF NOT EXISTS Users ("
-                                                      "Username TEXT PRIMARY KEY, "
-                                                      "Password TEXT NOT NULL, "
-                                                      "Permission INTEGER NOT NULL, "
-                                                      "Status INTEGER NOT NULL, "
-                                                      "CardNumber TEXT NOT NULL );";
-    constexpr auto SQL_CREATE_TABLE_USERINFO        = "CREATE TABLE IF NOT EXISTS UserInfo ("
-                                                      "Username TEXT PRIMARY KEY, "
-                                                      "RealName TEXT NOT NULL, "
-                                                      "Gender TEXT NOT NULL, "
-                                                      "StudentID TEXT NOT NULL UNIQUE, "
-                                                      "Department TEXT NOT NULL );";
-    constexpr auto SQL_CREATE_TABLE_TRANSACTIONS    = "CREATE TABLE IF NOT EXISTS Transactions ("
-                                                      "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-                                                      "CardNumber TEXT NOT NULL,"
-                                                      "Amount REAL NOT NULL, "
-                                                      "Balance REAL NOT NULL, "
-                                                      "TransactionTime TEXT NOT NULL,"
-                                                      "Operator TEXT NOT NULL );";
-    constexpr auto SQL_CREATE_TABLE_SYSTEM_SETTINGS = "CREATE TABLE IF NOT EXISTS SystemSettings ("
-                                                      "Key TEXT PRIMARY KEY, "
-                                                      "Value TEXT NOT NULL);";
+    constexpr auto SQL_CREATE_TABLE_USERS              = "CREATE TABLE IF NOT EXISTS Users ("
+                                                         "Username TEXT PRIMARY KEY, "
+                                                         "Password TEXT NOT NULL, "
+                                                         "Permission INTEGER NOT NULL, "
+                                                         "Status INTEGER NOT NULL, "
+                                                         "CardNumber TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_USERINFO           = "CREATE TABLE IF NOT EXISTS UserInfo ("
+                                                         "Username TEXT PRIMARY KEY, "
+                                                         "RealName TEXT NOT NULL, "
+                                                         "Gender TEXT NOT NULL, "
+                                                         "StudentID TEXT NOT NULL UNIQUE, "
+                                                         "Department TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_TRANSACTIONS       = "CREATE TABLE IF NOT EXISTS Transactions ("
+                                                         "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                                         "CardNumber TEXT NOT NULL,"
+                                                         "Amount REAL NOT NULL, "
+                                                         "Balance REAL NOT NULL, "
+                                                         "TransactionTime TEXT NOT NULL,"
+                                                         "Operator TEXT NOT NULL );";
+    constexpr auto SQL_CREATE_TABLE_CONSUMPTION_LIMITS = "CREATE TABLE IF NOT EXISTS ConsumptionLimits ("
+                                                         "CardNumber TEXT PRIMARY KEY, "
+                                                         "DailyLimit REAL NOT NULL DEFAULT {}, "
+                                                         "SingleLimit REAL NOT NULL DEFAULT {})";
+    constexpr auto SQL_CREATE_TABLE_SYSTEM_SETTINGS    = "CREATE TABLE IF NOT EXISTS SystemSettings ("
+                                                         "Key TEXT PRIMARY KEY, "
+                                                         "Value TEXT NOT NULL);";
 
     sqlite3_exec(database, SQL_CREATE_TABLE_USERS, nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_USERINFO, nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_TRANSACTIONS, nullptr, nullptr, nullptr);
+    sqlite3_exec(database, std::format(SQL_CREATE_TABLE_CONSUMPTION_LIMITS, Default::ConsumptionLimit, Default::ConsumptionLimit).c_str(), nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_SYSTEM_SETTINGS, nullptr, nullptr, nullptr);
 
     constexpr auto SQL_INIT_TABLE_SYSTEM_SETTINGS = "INSERT OR IGNORE INTO SystemSettings (Key, Value) VALUES ('{}', '0.0')";
@@ -155,7 +160,7 @@ void Database::create_account(const std::string& username, const std::string& pa
     sqlite3_bind_text(cursor, 2, password.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_int(cursor, 3, permission);
     sqlite3_bind_int(cursor, 4, UserStatus::NORMAL);
-    sqlite3_bind_text(cursor, 5, CardNumber::BLANK.data(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(cursor, 5, Default::CardNumber.data(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(cursor) != SQLITE_DONE)
         throw DatabaseException(ErrorMsg::USER_EXISTS);
@@ -240,7 +245,7 @@ void Database::create_student(const std::string& real_name, const std::string& g
         throw DatabaseException(ErrorMsg::USERINFO_EXISTS);
 
     try {
-        create_account(student_id, Password::DEFAULT, Permission::STUDENT);
+        create_account(student_id, Default::PASSWORD, Permission::STUDENT);
     } catch (const DatabaseException&) {
         // If create_account failed，rollback to previous UserInfo table.
         sqlite3_prepare_v2(database, "DELETE FROM UserInfo WHERE Username = ?", -1, &cursor, nullptr);
@@ -342,7 +347,7 @@ void Database::consume_card(const std::string& card_number, const double amount,
         throw DatabaseException(ErrorMsg::ACCOUNT_ABNORMAL);
 
     // Get current balance from table Transactions. Check whether the balance is greater than amount.
-    // If force_to_consume is false, throw BALANCE_INSUFFICIENT, else set user status to OVERDRAWN.
+    // If force_to_consume is false, throw ErrorMsg::BALANCE_INSUFFICIENT, else set user status to UserStatus::OVERDRAWN.
     double current_balance = 0.0;
     sqlite3_prepare_v2(database, "SELECT Balance FROM Transactions WHERE CardNumber = ? ORDER BY ID DESC LIMIT 1", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
@@ -366,6 +371,16 @@ void Database::consume_card(const std::string& card_number, const double amount,
     sqlite3_bind_double(cursor, 3, new_balance);
     sqlite3_bind_text(cursor, 4, merchant.c_str(), -1, SQLITE_STATIC);
 
+    sqlite3_step(cursor);
+}
+
+void Database::set_consumption_limit(const std::string& card_number, const double daily_limit, const double single_limit)
+{
+    constexpr auto SQL_UPDATE_CONSUMPTION_LIMIT = "INSERT OR REPLACE INTO ConsumptionLimits (CardNumber, DailyLimit, SingleLimit) VALUES (?, ?, ?)";
+    sqlite3_prepare_v2(database, SQL_UPDATE_CONSUMPTION_LIMIT, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_double(cursor, 2, daily_limit);
+    sqlite3_bind_double(cursor, 3, single_limit);
     sqlite3_step(cursor);
 }
 

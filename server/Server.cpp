@@ -235,6 +235,18 @@ void Server::handle_consume(const Session& session)
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });
 }
 
+void Server::handle_set_consumption_limit(const Session& session)
+{
+    const double daily_limit  = std::stod(session.message["daily_limit"]);
+    const double single_limit = std::stod(session.message["single_limit"]);
+
+    const auto card_number(Parser(database.query_account(session.username))["card_number"]);
+    std::string err = execute_and_response(session, [&] {
+        database.set_consumption_limit(card_number, daily_limit, single_limit);
+        session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, ""));
+    });
+}
+
 void Server::handle_query_abnormal_accounts(const Session& session)
 {
     execute_and_response_long(session, [&] { return database.query_abnormal_accounts(); });
