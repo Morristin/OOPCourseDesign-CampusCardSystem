@@ -44,7 +44,7 @@ public:
     void update_student(const std::string& student_id, const std::string& real_name, const std::string& gender, const std::string& department);
 
     void recharge_card(const std::string& card_number, double amount, const std::string& operator_name);
-    void consume_card(const std::string& card_number, double amount, const std::string& merchant);
+    void consume_card(const std::string& card_number, double amount, const std::string& merchant, bool force_to_consume);
     std::vector<std::string> query_transactions(const std::string& card_number);
     std::vector<std::string> query_merchant_transactions(const std::string& merchant);
     std::vector<std::string> export_transactions();

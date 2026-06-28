@@ -65,8 +65,13 @@ Parser Client::login() const
             std::cout << OutputType::ERROR << "Your password is not correct. Please try again." << OutputType::RESET << std::endl;
 
         if (message["status"] == MsgStatus::SUCCESS && std::stoi(message["user_status"]) == UserStatus::DELETED)
-            std::cout << OutputType::WARNING << "Your account has been deleted. Contact operator for help." << OutputType::RESET << std::endl;
+            std::cout << OutputType::ERROR << "Your account has been deleted. Contact operator for help." << OutputType::RESET << std::endl;
         else if (message["status"] == MsgStatus::SUCCESS && std::stoi(message["user_status"]) == UserStatus::FROZEN)
-            std::cout << OutputType::WARNING << "Your account has been frozen. Please contact operator." << OutputType::RESET << std::endl;
+            std::cout << OutputType::ERROR << "Your account has been frozen. Please contact operator." << OutputType::RESET << std::endl;
+        else if (message["status"] == MsgStatus::SUCCESS && std::stoi(message["user_status"]) == UserStatus::OVERDRAWN) {
+            std::cout << OutputType::WARNING << "Your account is overdrawn. Please recharge immediately." << OutputType::RESET << std::endl;
+            std::cout << "You can still view your records, but consumption is banned as your status is abnormal." << std::endl;
+            return message;
+        }
     }
 }

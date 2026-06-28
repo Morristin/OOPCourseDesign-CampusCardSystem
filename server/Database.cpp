@@ -44,7 +44,7 @@ void Database::initialize() const
     sqlite3_exec(database, SQL_CREATE_TABLE_TRANSACTIONS, nullptr, nullptr, nullptr);
     sqlite3_exec(database, SQL_CREATE_TABLE_SYSTEM_SETTINGS, nullptr, nullptr, nullptr);
 
-    constexpr auto SQL_INIT_TABLE_SYSTEM_SETTINGS = "INSERT OR IGNORE INTO SystemSettings (Key, Value) VALUES ({}, '0.0')";
+    constexpr auto SQL_INIT_TABLE_SYSTEM_SETTINGS = "INSERT OR IGNORE INTO SystemSettings (Key, Value) VALUES ('{}', '0.0')";
     sqlite3_exec(database, std::format(SQL_INIT_TABLE_SYSTEM_SETTINGS, SystemSettings::FIXED_FEE).c_str(), nullptr, nullptr, nullptr);
 }
 
@@ -115,7 +115,7 @@ void Database::check_and_deduct_fixed_fee()
 
     for (const auto& card_number : card_numbers) {
         try {
-            consume_card(card_number, fixed_fee, SystemSettings::FIXED_FEE.data());
+            consume_card(card_number, fixed_fee, SystemSettings::FIXED_FEE.data(), true);
         } catch (const DatabaseException& err) {
             logger.warning(std::format("Failed to deduct fixed fee for card {}: {}", card_number, err.what()));
         }
@@ -328,7 +328,7 @@ void Database::recharge_card(const std::string& card_number, double amount, cons
     sqlite3_step(cursor);
 }
 
-void Database::consume_card(const std::string& card_number, const double amount, const std::string& merchant)
+void Database::consume_card(const std::string& card_number, const double amount, const std::string& merchant, const bool force_to_consume = false)
 {
     std::lock_guard lock(database_mutex);
 
@@ -342,14 +342,21 @@ void Database::consume_card(const std::string& card_number, const double amount,
         throw DatabaseException(ErrorMsg::ACCOUNT_ABNORMAL);
 
     // Get current balance from table Transactions. Check whether the balance is greater than amount.
+    // If force_to_consume is false, throw BALANCE_INSUFFICIENT, else set user status to OVERDRAWN.
     double current_balance = 0.0;
     sqlite3_prepare_v2(database, "SELECT Balance FROM Transactions WHERE CardNumber = ? ORDER BY ID DESC LIMIT 1", -1, &cursor, nullptr);
     sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
     if (sqlite3_step(cursor) == SQLITE_ROW)
         current_balance = sqlite3_column_double(cursor, 0);
 
-    if (current_balance < amount)
+    if (current_balance < amount && !force_to_consume)
         throw DatabaseException(ErrorMsg::BALANCE_INSUFFICIENT);
+    else if (current_balance < amount && force_to_consume) {
+        sqlite3_prepare_v2(database, "UPDATE Users SET Status = ? WHERE CardNumber = ?", -1, &cursor, nullptr);
+        sqlite3_bind_int(cursor, 1, UserStatus::OVERDRAWN);
+        sqlite3_bind_text(cursor, 2, card_number.c_str(), -1, SQLITE_STATIC);
+        sqlite3_step(cursor);
+    }
 
     // Calculate new balance and insert consume record into Transactions.
     const double new_balance = current_balance - amount;

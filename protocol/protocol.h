@@ -21,9 +21,10 @@ constexpr std::string_view USERINFO_NOT_FOUND = "UserInfoNotFound";
 constexpr std::string_view USERINFO_EXISTS    = "UserInfoAlreadyExists";
 constexpr std::string_view CARD_NOT_FOUND     = "CardNotFound";
 
-constexpr std::string_view ACCOUNT_ABNORMAL = "AccountAbnormal";
-constexpr std::string_view ACCOUNT_DELETED  = "AccountDeleted";
-constexpr std::string_view ACCOUNT_FROZEN   = "AccountFrozen";
+constexpr std::string_view ACCOUNT_ABNORMAL  = "AccountAbnormal";
+constexpr std::string_view ACCOUNT_DELETED   = "AccountDeleted";
+constexpr std::string_view ACCOUNT_FROZEN    = "AccountFrozen";
+constexpr std::string_view ACCOUNT_OVERDRAWN = "AccountOverdrawn";
 
 constexpr std::string_view BALANCE_INSUFFICIENT  = "BalanceInsufficient";
 constexpr std::string_view PASSWORD_WRONG        = "PasswordWrong";
@@ -43,9 +44,10 @@ constexpr int SUPEROPERATOR = 7;
 }
 
 namespace UserStatus {
-constexpr int NORMAL  = 0;
-constexpr int DELETED = -1;
-constexpr int FROZEN  = 6;
+constexpr int NORMAL    = 7;
+constexpr int DELETED   = 1;
+constexpr int FROZEN    = 4;
+constexpr int OVERDRAWN = 6;
 }
 
 namespace CardNumber {

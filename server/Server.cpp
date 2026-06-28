@@ -233,7 +233,7 @@ void Server::handle_consume(const Session& session)
     const double amount           = std::stod(session.message["amount"]);
     const std::string merchant    = session.message["merchant"];
 
-    const auto err = execute_and_response(session, [&] { database.consume_card(card_number, amount, merchant);
+    const auto err = execute_and_response(session, [&] { database.consume_card(card_number, amount, merchant, false);
         session.stream.send_msg(std::format(STATUS_WITH_MSG, MsgStatus::SUCCESS, "")); });
 }
 
