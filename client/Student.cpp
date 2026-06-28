@@ -25,6 +25,10 @@ void Student::consume() const
         std::cout << OutputType::ERROR << "Consumption Failed. You do not have enough balance left." << OutputType::RESET << std::endl;
     else if (response["message"] == ErrorMsg::ACCOUNT_ABNORMAL)
         std::cout << OutputType::ERROR << "Consumption Failed. Your account is frozen or deleted. Please contact operator." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::EXCEED_SINGLE_CONSUMPTION_LIMIT)
+        std::cout << OutputType::ERROR << "Consumption Failed. You have reached your single consumption limit." << OutputType::RESET << std::endl;
+    else if (response["message"] == ErrorMsg::EXCEED_DAILY_CONSUMPTION_LIMIT)
+        std::cout << OutputType::ERROR << "Consumption Failed. You have reached your daily consumption limit." << OutputType::RESET << std::endl;
 }
 
 void Student::set_consumption_limit() const

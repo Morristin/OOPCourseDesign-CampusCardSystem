@@ -333,6 +333,41 @@ void Database::recharge_card(const std::string& card_number, double amount, cons
     sqlite3_step(cursor);
 }
 
+void Database::check_consumption_limit(const std::string& card_number, const double amount)
+{
+    // Get the daily limit and single limit from database.
+    double daily_limit  = Default::ConsumptionLimit;
+    double single_limit = Default::ConsumptionLimit;
+
+    constexpr auto SQL_QUERY_CONSUMPTION_LIMIT = "SELECT DailyLimit, SingleLimit FROM ConsumptionLimits WHERE CardNumber = ?";
+    sqlite3_prepare_v2(database, SQL_QUERY_CONSUMPTION_LIMIT, -1, &cursor, nullptr);
+    sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
+
+    if (sqlite3_step(cursor) == SQLITE_ROW) {
+        daily_limit  = sqlite3_column_double(cursor, 0);
+        single_limit = sqlite3_column_double(cursor, 1);
+    }
+
+    // Check whether this consumption matches limit requirements.
+    if (single_limit != Default::ConsumptionLimit && amount > single_limit)
+        throw DatabaseException(ErrorMsg::EXCEED_SINGLE_CONSUMPTION_LIMIT);
+
+    if (daily_limit != Default::ConsumptionLimit) {
+        constexpr auto SQL_CALCULATE_TODAY_CONSUMPTION = "SELECT COALESCE(SUM(ABS(Amount)), 0.0) FROM Transactions "
+                                                         "WHERE CardNumber = ? AND date(TransactionTime) = date('now', 'localtime') AND Amount < 0";
+
+        sqlite3_prepare_v2(database, SQL_CALCULATE_TODAY_CONSUMPTION, -1, &cursor, nullptr);
+        sqlite3_bind_text(cursor, 1, card_number.c_str(), -1, SQLITE_STATIC);
+
+        double today_consumption = 0.0;
+        if (sqlite3_step(cursor) == SQLITE_ROW)
+            today_consumption = sqlite3_column_double(cursor, 0);
+
+        if (today_consumption + amount > daily_limit)
+            throw DatabaseException(ErrorMsg::EXCEED_DAILY_CONSUMPTION_LIMIT);
+    }
+}
+
 void Database::consume_card(const std::string& card_number, const double amount, const std::string& merchant, const bool force_to_consume = false)
 {
     std::lock_guard lock(database_mutex);
